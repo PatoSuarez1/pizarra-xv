@@ -15,7 +15,10 @@ que se guardan por pasos y se reproducen con la pelota moviendose sola.
   y los que no entran esperan 10 m atras.
 - **Jugadas por pasos**: se acomodan las fichas, se agrega un paso, se vuelven a
   mover. Al reproducir, la animacion interpola entre pasos y dibuja las flechas.
-- **Flechas** de corrida, pase y patada.
+- **Flechas** de corrida, pase y patada, con la pelota atada a ellas: un pase o
+  una patada que sale del que la lleva la manda al destino en el paso siguiente y
+  la toma quien este ahi; una corrida se la lleva puesta. El que la tiene la
+  arrastra consigo cuando se lo mueve.
 - **Seleccion multiple**: se encierran varias fichas y se mueven, giran o espejan
   como un bloque, sin deformar la formacion.
 
