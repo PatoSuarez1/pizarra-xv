@@ -1,0 +1,1645 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Pizarra tactica de rugby: fichas arrastrables, formaciones reales y jugadas que se reproducen paso a paso.">
+<meta name="theme-color" content="#2C5137" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#E9EEE6" media="(prefers-color-scheme: light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8F%89%3C/text%3E%3C/svg%3E">
+<style>
+:root{color-scheme:light dark}
+html,body{margin:0}
+body{font:14px system-ui, sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Pizarra XV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap">
+<style>
+:root{
+  --cesped:#4A7A53; --cesped-2:#53855D; --ingoal:#3B6443; --cal:#F3F7F1;
+  --propio:#17395C; --rival:#B33F2E; --cuero:#B9722A;
+  --acento-fondo:#9E5F1E; --acento-texto:#FFF8EF;
+  --fondo:#E9EEE6; --sup:#FBFCF9; --sup-2:#EFF3ED; --linea:#D3DBCF;
+  --texto:#131A15; --mutado:#5C6A5E;
+  --sombra:0 1px 2px rgba(19,26,21,.05), 0 10px 28px -16px rgba(19,26,21,.25);
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --cesped:#2C5137; --cesped-2:#325B3D; --ingoal:#24422E; --cal:#DCE6DA;
+    --propio:#2C5F8F; --rival:#C9513E; --cuero:#D3903F;
+    --acento-fondo:#D3903F; --acento-texto:#17110A;
+    --fondo:#0E1512; --sup:#161F1A; --sup-2:#1D2822; --linea:#2B372F;
+    --texto:#DEE6DD; --mutado:#8B978C;
+    --sombra:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -16px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --cesped:#2C5137; --cesped-2:#325B3D; --ingoal:#24422E; --cal:#DCE6DA;
+  --propio:#2C5F8F; --rival:#C9513E; --cuero:#D3903F;
+  --acento-fondo:#D3903F; --acento-texto:#17110A;
+  --fondo:#0E1512; --sup:#161F1A; --sup-2:#1D2822; --linea:#2B372F;
+  --texto:#DEE6DD; --mutado:#8B978C;
+  --sombra:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -16px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--fondo); color:var(--texto);
+  font-family:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  font-size:14px; line-height:1.45;
+  padding-inline:max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right));
+  padding-block:14px calc(40px + env(safe-area-inset-bottom));
+  -webkit-text-size-adjust:100%;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.envoltorio{max-width:1360px; margin:0 auto; display:flex; flex-direction:column; gap:14px}
+
+/* ---------- encabezado ---------- */
+.barra{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap}
+.marca{
+  font-family:Archivo,"Arial Narrow",sans-serif; font-weight:800;
+  font-size:clamp(20px,3.4vw,26px); letter-spacing:-.02em; margin:0;
+}
+.marca span{color:var(--cuero)}
+.subtitulo{color:var(--mutado); font-size:12.5px; margin:0}
+.espaciador{flex:1}
+
+/* ---------- disposicion ---------- */
+.disposicion{display:grid; grid-template-columns:minmax(0,1fr) 326px; gap:14px; align-items:start}
+@media (max-width:1080px){ .disposicion{grid-template-columns:minmax(0,1fr)} }
+
+.barra-acciones{display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:8px 9px}
+.tarjeta{background:var(--sup); border:1px solid var(--linea); border-radius:var(--r); box-shadow:var(--sombra)}
+.bloque{border-bottom:1px solid var(--linea); padding:12px 13px; display:flex; flex-direction:column; gap:10px}
+.bloque:last-child{border-bottom:0}
+.rotulo{
+  font-family:"IBM Plex Sans Condensed","Arial Narrow",sans-serif;
+  font-weight:700; font-size:11px; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--mutado); margin:0;
+}
+
+/* ---------- cancha ---------- */
+.cancha-marco{padding:8px; overflow:hidden}
+svg.cancha{display:block; width:100%; height:auto; max-width:100%; touch-action:none;
+  border-radius:6px; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none}
+@media (max-width:760px){ svg.cancha{margin-inline:auto} }
+svg.cancha.dibujando{cursor:crosshair}
+.ficha{cursor:grab}
+.ficha.arrastrando{cursor:grabbing}
+.zona-toque{fill:transparent; stroke:none}
+.num{
+  font-family:"IBM Plex Sans Condensed","Arial Narrow",sans-serif;
+  font-weight:700; text-anchor:middle; dominant-baseline:central;
+  pointer-events:none;
+}
+.marca-metros{
+  font-family:"IBM Plex Sans Condensed","Arial Narrow",sans-serif;
+  font-weight:600; fill:var(--cal); opacity:.5; text-anchor:middle;
+}
+
+/* ---------- pasos ---------- */
+.pasos{display:flex; gap:8px; align-items:center; overflow-x:auto; padding-bottom:2px}
+.paso{
+  flex:0 0 auto; width:38px; height:38px; border-radius:8px;
+  border:1px solid var(--linea); background:var(--sup-2); color:var(--mutado);
+  font-family:"IBM Plex Sans Condensed",sans-serif; font-weight:700; font-size:15px;
+  cursor:pointer; display:grid; place-items:center; font-variant-numeric:tabular-nums;
+}
+.paso:hover{border-color:var(--cuero)}
+.paso[aria-current="true"]{background:var(--acento-fondo); border-color:var(--acento-fondo); color:var(--acento-texto)}
+.flecha-paso{flex:0 0 auto; color:var(--mutado); opacity:.5}
+
+/* ---------- controles ---------- */
+button{font:inherit; color:inherit}
+.btn{
+  display:inline-flex; align-items:center; gap:6px; justify-content:center;
+  padding:7px 11px; border-radius:8px; border:1px solid var(--linea);
+  background:var(--sup-2); cursor:pointer; font-weight:500; font-size:13px;
+  white-space:nowrap;
+}
+.btn:hover{border-color:var(--mutado)}
+.btn:active{transform:translateY(1px)}
+.btn.principal{background:var(--acento-fondo); border-color:var(--acento-fondo); color:var(--acento-texto); font-weight:600}
+.btn.principal:hover{filter:brightness(1.07); border-color:var(--acento-fondo)}
+.btn.quieto{background:transparent}
+.btn[aria-pressed="true"]{background:var(--acento-fondo); border-color:var(--acento-fondo); color:var(--acento-texto); font-weight:600}
+.btn:disabled{opacity:.4; cursor:not-allowed}
+.btn.chico{padding:5px 8px; font-size:12px}
+.btn.cuadrado{padding:6px 0; width:32px; font-family:"IBM Plex Sans Condensed",sans-serif;
+  font-weight:700; font-size:15px; line-height:1}
+.fila{display:flex; gap:7px; flex-wrap:wrap; align-items:center}
+.fila.pegada{gap:5px}
+:focus-visible{outline:2px solid var(--cuero); outline-offset:2px; border-radius:4px}
+
+input[type="text"], select{
+  font:inherit; font-size:13px; padding:6px 8px; border-radius:8px;
+  border:1px solid var(--linea); background:var(--sup-2); color:var(--texto);
+  min-width:0; max-width:100%;
+}
+label.campo{display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--mutado); flex:1}
+.interruptor{display:flex; align-items:center; gap:7px; font-size:13px; cursor:pointer}
+.interruptor input{width:16px; height:16px; accent-color:var(--acento-fondo); cursor:pointer}
+
+/* ---------- nota del paso ---------- */
+.nota-fila{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.nota-fila input{flex:1; min-width:180px}
+.cartel{
+  /* left:0/right:0 + margin auto, y NO left:50%: con left al 50% el ancho que el
+     navegador tiene para acomodar el texto es media pantalla, y la nota se parte
+     en cuatro renglones en un celular. */
+  position:absolute; left:0; right:0; bottom:14px; margin-inline:auto;
+  width:fit-content; max-width:min(92%, 460px);
+  background:rgba(10,16,12,.88); color:#F3F7F1; padding:9px 16px; border-radius:14px;
+  font-family:"IBM Plex Sans Condensed",sans-serif; font-weight:600; font-size:15px;
+  line-height:1.32; letter-spacing:.01em; pointer-events:none; text-align:center;
+  text-wrap:balance;
+}
+.cartel[hidden]{display:none!important}
+.columna-cancha{display:flex; flex-direction:column; gap:14px; min-width:0}
+.barra-seleccion{
+  position:absolute; left:0; right:0; bottom:14px; margin-inline:auto;
+  width:fit-content; max-width:min(94%, 460px); z-index:3;
+  display:flex; align-items:center; gap:6px; padding:6px 8px; border-radius:12px;
+  background:rgba(10,16,12,.9); color:#F3F7F1;
+}
+.barra-seleccion[hidden]{display:none!important}
+.barra-seleccion .btn{background:rgba(243,247,241,.14); border-color:rgba(243,247,241,.34); color:#F3F7F1}
+.barra-seleccion .btn:hover{background:rgba(243,247,241,.26); border-color:#F3F7F1}
+#cuenta-seleccion{
+  font-family:"IBM Plex Sans Condensed",sans-serif; font-weight:700; font-size:13px;
+  padding-inline:4px; white-space:nowrap;
+}
+.zoom-flotante{position:absolute; top:14px; right:14px; display:flex; gap:5px; z-index:2}
+.zoom-flotante .btn, .pista, .barra.sobre-cancha .btn{
+  background:rgba(12,20,15,.62); border-color:rgba(243,247,241,.32); color:#F3F7F1}
+.zoom-flotante .btn:hover, .pista:hover, .barra.sobre-cancha .btn:hover{
+  background:rgba(12,20,15,.8); border-color:#F3F7F1}
+@media (max-width:760px){ .barra .btn:disabled{opacity:.6} }
+.pista{display:none; position:absolute; left:14px; bottom:14px; z-index:2}
+.escena.en-vivo .zoom-flotante, .escena.en-vivo .pista,
+.escena.en-vivo .barra-seleccion{display:none!important}
+.escena{position:relative}
+
+/* ---------- plantel ---------- */
+.plantel{display:grid; grid-template-columns:repeat(auto-fill,minmax(128px,1fr)); gap:3px 10px}
+.puesto{display:flex; gap:7px; align-items:baseline; font-size:12px; color:var(--mutado)}
+.puesto b{
+  font-family:"IBM Plex Sans Condensed",sans-serif; color:var(--texto);
+  font-size:12.5px; width:15px; text-align:right; font-variant-numeric:tabular-nums;
+}
+
+/* ---------- biblioteca ---------- */
+.lista{display:flex; flex-direction:column; gap:5px; max-height:210px; overflow-y:auto}
+.item{display:flex; gap:8px; align-items:center; padding:6px 8px; border-radius:7px; background:var(--sup-2); border:1px solid transparent}
+.item:hover{border-color:var(--linea)}
+.item .nom{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; cursor:pointer; text-align:left; background:none; border:0; padding:0}
+.item .cnt{font-size:11px; color:var(--mutado); font-variant-numeric:tabular-nums; white-space:nowrap}
+.vacio{color:var(--mutado); font-size:12.5px; font-style:italic}
+.pie{color:var(--mutado); font-size:11.5px; line-height:1.5}
+.pie kbd{
+  font-family:"IBM Plex Sans Condensed",sans-serif; font-size:11px; background:var(--sup-2);
+  border:1px solid var(--linea); border-radius:4px; padding:0 4px;
+}
+@media (pointer:coarse){
+  .btn{padding:9px 12px}
+  .btn.chico{padding:8px 10px; font-size:13px}
+  .paso{width:44px; height:44px; font-size:16px}
+  input[type="text"], select{font-size:16px; padding:9px 10px}
+  .item .nom{padding:4px 0}
+}
+/* En el celular la cancha ocupa la pantalla entera y todo lo demas aparece al
+   bajar. El encabezado queda flotando encima, sobre el in-goal.               */
+@media (max-width:760px){
+  body{padding-inline:0; padding-block:0 calc(28px + env(safe-area-inset-bottom))}
+  .envoltorio{gap:0; position:relative}
+  .disposicion{gap:0}
+  .columna-cancha{gap:0}
+
+  .barra{position:absolute; top:0; left:0; right:0; z-index:6;
+    padding:10px max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left));
+    gap:8px; align-items:center; flex-wrap:nowrap; color:#F3F7F1}
+  .marca{font-size:19px; white-space:nowrap; color:#F3F7F1;
+    text-shadow:0 1px 6px rgba(6,12,8,.7)}
+  .subtitulo{display:none}           /* el nombre pasa al rotulo de los pasos */
+
+  .cancha-marco{order:1; padding:0; border:0; border-radius:0; box-shadow:none;
+    background:transparent}
+  svg.cancha{border-radius:0}
+  .pista{display:inline-flex}
+  .zoom-flotante{top:auto; bottom:14px; right:14px}
+
+  /* con la cancha a pantalla completa, abajo ya estan el zoom y "Controles" */
+  .barra-seleccion{top:58px; bottom:auto; padding:5px 7px}
+  .barra-seleccion .btn{padding:7px 9px; font-size:12.5px}
+
+  .barra-acciones{order:2; margin:8px 10px 0; padding:6px 7px; gap:5px;
+    flex-wrap:nowrap; overflow-x:auto}
+  .barra-acciones .fila{flex-wrap:nowrap}
+  .barra-acciones .btn{padding:8px 10px; font-size:12.5px; flex:0 0 auto}
+  .tarjeta-pasos{order:3; margin:8px 10px 0}
+  .disposicion > .tarjeta{margin:8px 10px 0}
+  .solo-ancho{display:none}
+}
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms!important; transition-duration:.01ms!important} }
+</style>
+
+<div class="envoltorio">
+
+  <header class="barra">
+    <h1 class="marca">Pizarra <span>XV</span></h1>
+    <p class="subtitulo" id="pie-jugada">Jugada sin guardar</p>
+    <div class="espaciador"></div>
+    <div class="fila pegada">
+      <button class="btn chico quieto" id="btn-tema" type="button" title="Cambiar entre claro y oscuro">Tema</button>
+      <button class="btn chico quieto" id="btn-deshacer" type="button">Deshacer</button>
+      <button class="btn chico quieto" id="btn-png" type="button" hidden>Bajar PNG</button>
+    </div>
+  </header>
+
+  <div class="disposicion">
+
+    <!-- ============ CANCHA ============ -->
+    <div class="columna-cancha">
+      <div class="tarjeta barra-acciones" id="barra-acciones">
+        <div class="fila pegada" id="herramientas" role="group" aria-label="Herramienta">
+          <button class="btn" type="button" data-herr="mover" aria-pressed="true">Mover<span class="solo-ancho"> fichas</span></button>
+          <button class="btn" type="button" data-herr="corrida" aria-pressed="false">Corrida</button>
+          <button class="btn" type="button" data-herr="pase" aria-pressed="false">Pase</button>
+          <button class="btn" type="button" data-herr="patada" aria-pressed="false">Patada</button>
+        </div>
+        <div class="espaciador"></div>
+        <button class="btn" id="btn-inicio" type="button">Inicio<span class="solo-ancho"> de partido</span></button>
+      </div>
+      <div class="tarjeta cancha-marco escena">
+        <svg class="cancha" id="cancha" viewBox="-2.5 -2.5 125 75" role="img"
+             aria-label="Cancha de rugby con las fichas de los quince jugadores de cada equipo">
+          <defs>
+            <marker id="punta-corrida" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="4.2" markerHeight="4.2" orient="auto-start-reverse">
+              <path d="M0,1 L9.5,5 L0,9 Z" fill="var(--cal)"></path>
+            </marker>
+            <marker id="punta-pase" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="4.2" markerHeight="4.2" orient="auto-start-reverse">
+              <path d="M0,1 L9.5,5 L0,9 Z" fill="var(--cuero)"></path>
+            </marker>
+            <marker id="punta-patada" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="4.6" markerHeight="4.6" orient="auto-start-reverse">
+              <path d="M0,1 L9.5,5 L0,9 Z" fill="#F5D9A6"></path>
+            </marker>
+          </defs>
+          <g id="mundo">
+            <g id="capa-cancha"></g>
+            <g id="capa-flechas"></g>
+            <g id="capa-fichas"></g>
+            <g id="capa-seleccion"></g>
+          </g>
+        </svg>
+        <div class="zoom-flotante" role="group" aria-label="Acercar la cancha">
+          <button class="btn cuadrado" id="btn-menos" type="button" aria-label="Alejar">−</button>
+          <button class="btn cuadrado" id="btn-mas" type="button" aria-label="Acercar">+</button>
+        </div>
+        <div class="barra-seleccion" id="barra-seleccion" hidden>
+          <span id="cuenta-seleccion">0</span>
+          <button class="btn chico" id="btn-espejo-ancho" type="button">Cambiar de lado</button>
+          <button class="btn chico" id="btn-espejo-largo" type="button">Dar vuelta</button>
+          <button class="btn chico" id="btn-soltar" type="button" aria-label="Soltar la selección">Soltar</button>
+        </div>
+        <div class="cartel" id="cartel" hidden></div>
+        <button class="btn pista" id="btn-pista" type="button">Controles ↓</button>
+      </div>
+
+      <div class="tarjeta tarjeta-pasos">
+        <div class="bloque">
+          <div class="fila" style="justify-content:space-between">
+            <p class="rotulo" id="rotulo-pasos">Pasos de la jugada</p>
+            <div class="fila pegada">
+              <button class="btn chico" id="btn-paso-nuevo" type="button">+ Paso</button>
+              <button class="btn chico" id="btn-paso-borrar" type="button">Borrar paso</button>
+            </div>
+          </div>
+          <div class="pasos" id="pasos"></div>
+          <div class="nota-fila">
+            <input type="text" id="nota" maxlength="90" placeholder="Qué pasa en este paso: “9 abre corto al 10”">
+            <button class="btn principal" id="btn-reproducir" type="button">▶ Reproducir</button>
+            <select id="velocidad" aria-label="Velocidad de la reproducción">
+              <option value="2200">Lento</option>
+              <option value="1400" selected>Normal</option>
+              <option value="850">Rápido</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PANEL ============ -->
+    <div class="tarjeta">
+
+      <div class="bloque">
+        <p class="rotulo">Flechas</p>
+        <p class="pie">Elegí Corrida, Pase o Patada arriba de la cancha y arrastrá sobre el pasto. Tocá una flecha para borrarla. Son las de este paso.</p>
+        <div class="fila">
+          <button class="btn chico quieto" id="btn-sin-flechas" type="button">Sacar las flechas del paso</button>
+        </div>
+      </div>
+
+      <div class="bloque">
+        <p class="rotulo">Formaciones</p>
+        <p class="pie">Arman a los dos equipos: el que la tiene y el que defiende
+          enfrente. En el line, el lado elige sobre qué touch se forma, y los
+          forwards que no entran esperan 10 m atrás para cambiarlos por los que
+          saltan.</p>
+        <div class="fila">
+          <label class="campo">Con la pelota
+            <select id="equipo-formacion">
+              <option value="a">Nosotros (azul)</option>
+              <option value="b">Ellos (rojo)</option>
+            </select>
+          </label>
+        </div>
+        <div class="fila">
+          <select id="lugar-largo" aria-label="A qué altura de la cancha" style="flex:1">
+            <option value="22n">En nuestras 22</option>
+            <option value="medio-n">Nuestro campo</option>
+            <option value="mitad" selected>Mitad de cancha</option>
+            <option value="medio-e">Campo de ellos</option>
+            <option value="22e">En sus 22</option>
+            <option value="cerca">Cerca de su ingoal</option>
+          </select>
+          <select id="lugar-ancho" aria-label="Sobre qué lado" style="flex:1">
+            <option value="izq">Lado izquierdo</option>
+            <option value="centro" selected>Por el medio</option>
+            <option value="der">Lado derecho</option>
+          </select>
+        </div>
+        <div class="fila">
+          <select id="cantidad-line" aria-label="Cuántos forwards entran al line" style="flex:1">
+            <option value="7" selected>Line de 7</option>
+            <option value="6">Line de 6</option>
+            <option value="5">Line de 5</option>
+            <option value="4">Line de 4</option>
+            <option value="3">Line de 3</option>
+            <option value="2">Line de 2</option>
+          </select>
+        </div>
+        <div class="fila pegada" id="formaciones">
+          <button class="btn chico" type="button" data-form="scrum">Scrum</button>
+          <button class="btn chico" type="button" data-form="line">Line</button>
+          <button class="btn chico" type="button" data-form="ruck">Ruck</button>
+          <button class="btn chico" type="button" data-form="fase">Fase abierta</button>
+          <button class="btn chico" type="button" data-form="salida">Salida</button>
+        </div>
+      </div>
+
+      <div class="bloque">
+        <p class="rotulo">Fichas</p>
+        <div class="fila">
+          <select id="cantidad-a" aria-label="Cuántos jugadores nuestros hay en cancha" style="flex:1"><option value="15">Nosotros: 15</option><option value="7">Nosotros: 7</option><option value="0">Nosotros: 0</option></select>
+          <select id="cantidad-b" aria-label="Cuántos rivales hay en cancha" style="flex:1"><option value="15">Ellos: 15</option><option value="7">Ellos: 7</option><option value="0">Ellos: 0</option></select>
+        </div>
+        <div class="fila">
+          <select id="tamano-ficha" aria-label="Tamaño de las fichas" style="flex:1">
+            <option value="chico">Fichas chicas</option>
+            <option value="normal" selected>Fichas normales</option>
+            <option value="grande">Fichas grandes</option>
+          </select>
+        </div>
+        <label class="interruptor"><input type="checkbox" id="ver-puestos"> Mostrar el puesto en la ficha</label>
+        <p class="pie">Se agarran desde bastante más lejos de lo que ocupan, así que
+          achicarlas no las hace más difíciles de mover. Para separar un scrum, acercá
+          la cancha con dos dedos o con el + : las fichas no crecen al acercar.</p>
+        <p class="pie"><b>Varias a la vez:</b> arrastrá sobre pasto vacío para encerrarlas
+          (en el celular, mantené apretado un momento y recién ahí arrastrá). El grupo se
+          mueve sin deformarse, se gira con el tirador y se da vuelta con los botones.</p>
+      </div>
+
+      <div class="bloque">
+        <p class="rotulo">Los quince</p>
+        <div class="plantel" id="plantel"></div>
+      </div>
+
+      <div class="bloque">
+        <p class="rotulo">Mis jugadas</p>
+        <div class="fila">
+          <input type="text" id="nombre-jugada" placeholder="Nombre de la jugada" style="flex:1">
+          <button class="btn principal" id="btn-guardar" type="button">Guardar</button>
+        </div>
+        <div class="lista" id="biblioteca"></div>
+        <p class="pie" id="pie-almacen">Cargando el listado…</p>
+      </div>
+
+      <div class="bloque">
+        <p class="rotulo">Atajos</p>
+        <p class="pie">
+          <kbd>Espacio</kbd> reproducir · <kbd>←</kbd> <kbd>→</kbd> cambiar de paso ·
+          <kbd>N</kbd> paso nuevo · <kbd>Z</kbd> deshacer · <kbd>1</kbd>-<kbd>4</kbd> herramienta ·
+          <kbd>Esc</kbd> soltar la selección
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ===================== Medidas reales de una cancha ===================== */
+/* Todo se piensa en metros. El campo de juego va de la try line (x=10) a la
+   try line (x=110) y mide 70 m de ancho. Los dos in-goal son de 10 m.      */
+const LARGO = 120, ANCHO = 70, TRY_IZQ = 10, TRY_DER = 110, MITAD = 60;
+
+const PUESTOS = {1:"Pilar izquierdo",2:"Hooker",3:"Pilar derecho",4:"Segunda línea",
+  5:"Segunda línea",6:"Ala ciego",7:"Ala abierto",8:"Octavo",9:"Medio scrum",
+  10:"Apertura",11:"Wing izquierdo",12:"Primer centro",13:"Segundo centro",
+  14:"Wing derecho",15:"Fullback"};
+const SIGLAS = {1:"PI",2:"HK",3:"PD",4:"S4",5:"S5",6:"A6",7:"A7",8:"N8",
+  9:"MS",10:"AP",11:"W11",12:"C12",13:"C13",14:"W14",15:"FB"};
+
+/* ===================== Formaciones ======================================
+   Cada formacion se escribe desde la perspectiva del equipo QUE LA JUEGA, que
+   ataca hacia +x, en METROS RELATIVOS al punto donde ocurre: dx hacia adelante,
+   dy hacia el lado abierto. Trae siempre a los DOS equipos: ocho contra ocho en
+   el scrum, las dos filas del line, y del otro lado la linea defensiva enfrente.
+   Al ubicarla, dy se da vuelta si el punto cae en la mitad de arriba, para que
+   los backs salgan siempre hacia donde hay cancha.
+   En el line el punto esta SOBRE la linea de touch y dy mide cuanto se alejan de
+   ella: la fila va perpendicular a la touch, no a lo largo del campo.
+   Un dy "C" o "c" no es relativo: manda al jugador al corredor de 5 a 15 metros
+   de la touch abierta o de la ciega, que es donde espera un wing.            */
+const FORMACIONES = {
+  scrum:{ nombre:"Scrum",
+    propio:{1:[-1.3,-2.6],2:[-1.3,0],3:[-1.3,2.6],4:[-4,-1.3],5:[-4,1.3],
+      6:[-4,-3.9],7:[-4,3.9],8:[-6.6,0],9:[-3,-5.5],
+      10:[-15,12],12:[-19,21],13:[-23,30],15:[-28,22],14:[-27,"C"],11:[-13,"c"]},
+    rival:{1:[1.3,-2.6],2:[1.3,0],3:[1.3,2.6],4:[4,-1.3],5:[4,1.3],
+      6:[4,-3.9],7:[4,3.9],8:[6.6,0],9:[4.5,-5.5],
+      10:[9,10],12:[9,18],13:[9,26],11:[13,"C"],14:[19,"c"],15:[23,12]},
+    pelota:[-3,-5.5]},
+
+  /* En el line la fila se arma segun cuantos forwards entren: los primeros del
+     orden van a la fila, de adelante hacia atras, y los que sobran esperan 10 m
+     atras, a mano para cambiarlos por cualquiera de los que saltan.          */
+  line:{ nombre:"Line", sobreTouch:true,
+    enFila:{ orden:[1,4,5,3,6,7,8],
+      propio:(i)=>[-1.2, 5 + i*2.4],  rival:(i)=>[2.2, 5 + i*2.4],
+      fueraPropio:(i)=>[-11, 5 + i*4], fueraRival:(i)=>[11, 5 + i*4] },
+    propio:{2:[0,.8],9:[-7,9],
+      10:[-13.5,26],12:[-19,35],13:[-23.5,44],15:[-27.5,52],14:[-27,"C"],
+      11:[-20,19]},
+    rival:{2:[2.2,2.6],9:[6.6,9],
+      10:[14,28],12:[14,38],13:[14,47],11:[14,19],14:[19.5,"C"],15:[23.5,36]},
+    pelota:[0,.8]},
+
+  ruck:{ nombre:"Ruck",
+    propio:{1:[.5,-1.4],2:[.5,1.4],9:[-2.4,0],3:[-1,-6],4:[-1,6],5:[-3.5,-11],
+      6:[-2.5,11],7:[-5,17],8:[-4,-16],
+      10:[-10,12],12:[-14,21],13:[-18,30],11:[-21,"C"],14:[-15,"c"],15:[-24,18]},
+    rival:{1:[2.3,-1.4],2:[2.3,1.4],9:[4.4,-2.8],8:[4,-16],3:[4,-10],11:[4,-5],
+      4:[4,4],5:[4,9],6:[4,14],7:[4,19],10:[4,24],12:[4,29],
+      13:[10,"C"],14:[14,"c"],15:[19,6]},
+    pelota:[-2.4,0]},
+
+  fase:{ nombre:"Fase abierta",
+    propio:{9:[-3,0],8:[-2,-20],1:[-1,-8],2:[0,-5],3:[-1,-2],4:[-2,8],5:[-1,11],
+      6:[-2,14],7:[-3,26],10:[-11,10],12:[-15,19],13:[-19,28],11:[-22,"C"],
+      14:[-15,"c"],15:[-25,14]},
+    rival:{8:[4,-18],6:[4,-13],4:[4,-8],2:[4,-3],1:[4,2],3:[4,7],5:[4,12],
+      7:[4,17],10:[4,23],12:[4,29],13:[4,"C"],9:[6,-1],11:[12,"c"],
+      14:[15,-26],15:[18,4]},
+    pelota:[-3,0]},
+
+  salida:{ nombre:"Salida", fijo:[MITAD,ANCHO/2],
+    propio:{10:[-1,0],11:[-2,-30],2:[-2,-23],8:[-2,-16],4:[-2,-9],5:[-2,9],
+      6:[-2,16],7:[-2,23],14:[-2,30],9:[-6,-5],1:[-7,-15],3:[-8,19],
+      12:[-9,6],13:[-11,21],15:[-14,0]},
+    rival:{4:[11,-21],8:[11,-11],5:[11,-1],2:[11,9],3:[17,-16],6:[17,-6],
+      1:[17,4],7:[17,14],9:[21,-1],10:[25,7],12:[28,15],13:[31,23],
+      11:[20,-25],14:[29,31],15:[37,0]},
+    pelota:[-1,0]}
+};
+
+/* Donde puede ocurrir una formacion. El largo son marcas de la cancha; el ancho,
+   los tres canales. En el line, el ancho elige sobre que touch se forma.       */
+const LUGAR_LARGO = {
+  "22n":TRY_IZQ+22, "medio-n":45, "mitad":MITAD, "medio-e":75,
+  "22e":TRY_DER-22, "cerca":TRY_DER-8
+};
+const LUGAR_ANCHO = {izq:15, centro:ANCHO/2, der:ANCHO-15};
+
+function ubicarFormacion(clave, quien, largo, ancho, enLine){
+  const f = FORMACIONES[clave];
+  const punto = f.fijo ||
+    (Array.isArray(largo) ? largo : [LUGAR_LARGO[largo], LUGAR_ANCHO[ancho]]);
+  const signo = quien === "a" ? 1 : -1;
+  // sin touch elegida el line se forma sobre la de arriba
+  const touchDelLine = ancho === "der" ? ANCHO : 0;
+  const abierto = f.sobreTouch ? 1 : (punto[1] > ANCHO/2 ? -1 : 1);
+  // el lado abierto es el que tiene mas cancha; en el line, el opuesto a su touch
+  const touchAbierta = f.sobreTouch ? ANCHO - touchDelLine : (abierto > 0 ? ANCHO : 0);
+  const corredor = (t)=> t === 0 ? 10 : ANCHO - 10;   // en el medio de las 5 y las 15
+
+  // los forwards del line: los que entran, en la fila; los demas, esperando atras
+  const propia = Object.assign({}, f.propio), contra = Object.assign({}, f.rival);
+  if (f.enFila){
+    const g = f.enFila;
+    const cuantos = Math.max(2, Math.min(g.orden.length, enLine || g.orden.length));
+    g.orden.forEach((n, i)=>{
+      propia[n] = i < cuantos ? g.propio(i) : g.fueraPropio(i - cuantos);
+      contra[n] = i < cuantos ? g.rival(i)  : g.fueraRival(i - cuantos);
+    });
+  }
+
+  /* Contra el ingoal no entra el fondo de la formacion. En vez de amontonar
+     ahi a todos los que se pasaron —dos backs terminaban en el mismo punto—,
+     se acorta la profundidad de la formacion entera, que es lo que hace un
+     equipo cuando juega con la linea de fondo encima.                        */
+  const hondo = (tabla)=>{
+    let f2 = 1;
+    for (const n in tabla){
+      const x = punto[0] + signo*tabla[n][0];
+      if (x < 1.5 && punto[0] > 1.5) f2 = Math.min(f2, (punto[0]-1.5)/(punto[0]-x));
+      if (x > LARGO-1.5 && punto[0] < LARGO-1.5) f2 = Math.min(f2, (LARGO-1.5-punto[0])/(x-punto[0]));
+    }
+    return f2;
+  };
+  const encoge = Math.min(hondo(propia), hondo(contra));
+
+  const donde = (d)=>{
+    const x = punto[0] + signo*d[0]*encoge;
+    if (d[1] === "C") return acotar([x, corredor(touchAbierta)]);
+    if (d[1] === "c") return acotar([x, corredor(ANCHO - touchAbierta)]);
+    if (f.sobreTouch) return acotar([x, touchDelLine === 0 ? d[1] : ANCHO - d[1]]);
+    return acotar([x, punto[1] + abierto*d[1]]);
+  };
+
+  const salida = {};
+  const poner = (equipo, tabla)=>{ for (const n in tabla) salida[equipo+n] = donde(tabla[n]); };
+  poner(quien, propia);
+  poner(quien === "a" ? "b" : "a", contra);
+  if (f.pelota) salida.pelota = donde(f.pelota);
+  return salida;
+}
+
+/* ===================== Estado ===================== */
+const estado = {
+  jugada: null,          // {id, nombre, pasos:[{pos, flechas, nota}]}
+  paso: 0,
+  herramienta: "mover",
+  enCancha: {a:15, b:15},
+  tamano: "normal",
+  verPuestos: false,
+  vertical: false,
+  reproduciendo: false,
+  seleccion: [],                 // claves de las fichas marcadas, se mueven juntas
+  guardadaComo: null
+};
+const historial = [];
+let marcando = null, esperaMarca = null, desdePx = null, rotando = null;
+
+const $ = (id)=>document.getElementById(id);
+const svg = $("cancha"), mundo = $("mundo");
+const capaCancha = $("capa-cancha"), capaFlechas = $("capa-flechas"),
+      capaFichas = $("capa-fichas"), capaSeleccion = $("capa-seleccion");
+const NS = "http://www.w3.org/2000/svg";
+
+function crear(tipo, atributos){
+  const el = document.createElementNS(NS, tipo);
+  for (const k in atributos) if (atributos[k] !== null) el.setAttribute(k, atributos[k]);
+  return el;
+}
+
+/* ===================== La cancha ===================== */
+function dibujarCancha(){
+  capaCancha.textContent = "";
+  const g = document.createDocumentFragment();
+
+  // franjas de pasto cortado, de 10 en 10 metros
+  for (let x = TRY_IZQ; x < TRY_DER; x += 10)
+    g.appendChild(crear("rect",{x, y:0, width:10, height:ANCHO,
+      fill:((x-TRY_IZQ)/10)%2 ? "var(--cesped-2)" : "var(--cesped)"}));
+  // in-goals
+  g.appendChild(crear("rect",{x:0, y:0, width:TRY_IZQ, height:ANCHO, fill:"var(--ingoal)"}));
+  g.appendChild(crear("rect",{x:TRY_DER, y:0, width:TRY_IZQ, height:ANCHO, fill:"var(--ingoal)"}));
+
+  const linea = (x1,y1,x2,y2,grosor,guion,opacidad)=> crear("line",{x1,y1,x2,y2,
+    stroke:"var(--cal)", "stroke-width":grosor, "stroke-dasharray":guion, opacity:opacidad||1});
+
+  // laterales y fondos
+  g.appendChild(crear("rect",{x:0, y:0, width:LARGO, height:ANCHO, fill:"none",
+    stroke:"var(--cal)", "stroke-width":.35}));
+  // try lines y mitad, que son las que mandan
+  [TRY_IZQ, TRY_DER, MITAD].forEach(x => g.appendChild(linea(x,0,x,ANCHO,.5)));
+  // 22 de cada lado
+  [TRY_IZQ+22, TRY_DER-22].forEach(x => g.appendChild(linea(x,0,x,ANCHO,.35)));
+  // los 10 son de puntos, igual que en la cancha
+  [MITAD-10, MITAD+10].forEach(x => g.appendChild(linea(x,0,x,ANCHO,.35,"1.6 1.6")));
+  // los 5 de la try line
+  [TRY_IZQ+5, TRY_DER-5].forEach(x => g.appendChild(linea(x,0,x,ANCHO,.28,"1 1.6",.75)));
+  // corredores de 5 y 15 metros desde cada lateral
+  [5,15,ANCHO-15,ANCHO-5].forEach(y =>
+    g.appendChild(linea(TRY_IZQ,y,TRY_DER,y,.22,"1 2.4",.6)));
+
+  // postes en H sobre la try line
+  [TRY_IZQ, TRY_DER].forEach(x=>{
+    g.appendChild(crear("path",{d:`M${x},${ANCHO/2-2.8} L${x},${ANCHO/2+2.8}`,
+      stroke:"var(--cal)","stroke-width":.7,"stroke-linecap":"round"}));
+    g.appendChild(crear("circle",{cx:x, cy:ANCHO/2-2.8, r:.75, fill:"var(--cal)"}));
+    g.appendChild(crear("circle",{cx:x, cy:ANCHO/2+2.8, r:.75, fill:"var(--cal)"}));
+  });
+
+  // marcas de metros, como las de la línea de touch
+  const rotulo = (x, texto) => {
+    [6.5, ANCHO-4].forEach(y=>{
+      const t = crear("text",{x, y, class:"marca-metros", "font-size":3.4});
+      t.textContent = texto;
+      if (estado.vertical) t.setAttribute("transform", `rotate(-90 ${x} ${y})`);
+      g.appendChild(t);
+    });
+  };
+  rotulo(TRY_IZQ+22, "22"); rotulo(TRY_DER-22, "22");
+  rotulo(MITAD-10, "10"); rotulo(MITAD+10, "10");
+
+  capaCancha.appendChild(g);
+}
+
+/* ===================== Orientación y acercamiento =====================
+   Las fichas se dibujan divididas por la escala, asi que al acercar NO crecen:
+   se separan. Es lo que hace manejable un scrum en la pantalla de un celular. */
+const vista = {k:1, x:0, y:0};
+const ESCALA_MAX = 6;
+
+function caja(){ return svg.getAttribute("viewBox").split(" ").map(Number); }
+function giroBase(){ return estado.vertical ? "translate(" + ANCHO + ",0) rotate(90)" : ""; }
+function aplicarVista(){
+  mundo.setAttribute("transform",
+    ("translate(" + vista.x + "," + vista.y + ") scale(" + vista.k + ") " + giroBase()).trim());
+}
+function acotarVista(){
+  const v = caja(), k = vista.k;
+  vista.x = Math.min(v[0]*(1-k), Math.max((v[0]+v[2])*(1-k), vista.x));
+  vista.y = Math.min(v[1]*(1-k), Math.max((v[1]+v[3])*(1-k), vista.y));
+}
+function aVista(px){                       // pixel de pantalla -> unidad del viewBox
+  const ctm = svg.getScreenCTM();
+  if (!ctm) return [0,0];
+  const q = new DOMPoint(px[0], px[1]).matrixTransform(ctm.inverse());
+  return [q.x, q.y];
+}
+function acercar(factor, centro){
+  const k0 = vista.k, k = Math.min(ESCALA_MAX, Math.max(1, k0*factor));
+  if (k === k0) return;
+  const v = caja();
+  const c = centro || [v[0]+v[2]/2, v[1]+v[3]/2];
+  vista.x = c[0] - (c[0]-vista.x)*(k/k0);
+  vista.y = c[1] - (c[1]-vista.y)*(k/k0);
+  vista.k = k;
+  acotarVista(); aplicarVista(); dibujarFichas(); dibujarFlechas();
+}
+
+/* Con la cancha dada vuelta, lo que manda es el alto de la pantalla: se mide lo que
+   quedo libre abajo del encabezado en vez de descontar un numero fijo, que se
+   desfasa apenas cambia un boton de renglon.                                    */
+function ajustarAlto(){
+  if (!estado.vertical){ svg.style.width = ""; return; }
+  const arriba = svg.getBoundingClientRect().top + window.scrollY;
+  const libre = window.innerHeight - arriba;          // arranca pegada arriba de todo
+  const cabe = svg.parentElement.clientWidth;
+  svg.style.width = Math.max(220, Math.min(cabe, libre * (ANCHO+5)/(LARGO+5))) + "px";
+}
+
+function acomodar(){
+  const vertical = window.innerWidth < 760;
+  if (vertical === estado.vertical && capaCancha.childNodes.length){ ajustarAlto(); return; }
+  estado.vertical = vertical;
+  svg.setAttribute("viewBox", vertical
+    ? `-2.5 -2.5 ${ANCHO+5} ${LARGO+5}`
+    : `-2.5 -2.5 ${LARGO+5} ${ANCHO+5}`);
+  vista.k = 1; vista.x = 0; vista.y = 0;
+  aplicarVista();
+  ajustarAlto();
+  dibujarCancha();
+}
+
+const conDedo = window.matchMedia("(pointer: coarse)").matches;
+function porMetro(){
+  const ladoCorto = estado.vertical ? ANCHO+5 : LARGO+5;
+  return (svg.clientWidth || 900) / ladoCorto;          // pixeles por metro
+}
+/* El radio se mide en METROS de cancha, no en pixeles: asi la ficha guarda la misma
+   proporcion contra la cancha en un monitor y en un celular. El piso en pixeles es
+   para que en una pantalla chica no quede un punto ilegible. Todo se divide por la
+   escala, de modo que al acercar la ficha conserva su tamano en pantalla y las
+   fichas se SEPARAN — que es lo que sirve para desarmar un scrum.
+   Ojo: lo que se agarra no es lo que se ve. La tolerancia se mantiene en 48 px con
+   el dedo aunque la ficha se dibuje chica.                                       */
+const FACTOR_FICHA = {chico:.75, normal:1, grande:1.4};
+function radioFicha(){
+  const base = Math.max(1.4, 7.5 / porMetro());        // 1,40 m ~ 4% del ancho
+  return base * FACTOR_FICHA[estado.tamano] / vista.k;
+}
+function tolerancia(){
+  return Math.max(radioFicha()*1.7, (conDedo ? 24 : 16) / (porMetro() * vista.k));
+}
+
+/* ===================== Pasos y posiciones ===================== */
+function pasoVacio(){
+  return {pos:{}, flechas:[], nota:""};
+}
+
+function jugadaDeEjemplo(){
+  const base = ubicarFormacion("scrum", "a", [85,30], "centro");
+
+  const pasos = [
+    {pos: base, nota:"Scrum nuestro a 22 del ingoal. El 8 la controla, el 9 la espera.",
+     flechas:[{t:"pase", p:[82,24.5,71,35]}, {t:"corrida", p:[71,35,75,39]}]},
+    {cambios:{a:{9:[79,27],10:[75,38],12:[72,44],13:[69,50],14:[65,60],15:[64,40]},
+              b:{10:[88,39],12:[88,45],13:[88,51],11:[88,60]}},
+     pelota:[75,38],
+     nota:"El 9 abre al 10, que juega plano con los centros.",
+     flechas:[{t:"pase", p:[75,38,72,44]}, {t:"corrida", p:[65,60,70,57]}]},
+    {cambios:{a:{9:[82,29],10:[79,40],12:[77,46],13:[74,52],14:[69,60],15:[70,42]},
+              b:{10:[90,41],12:[90,47],13:[90,53],11:[90,61],15:[96,52]}},
+     pelota:[77,46],
+     nota:"El 12 fija a su centro y la suelta afuera antes del contacto.",
+     flechas:[{t:"pase", p:[77,46,74,52]}, {t:"corrida", p:[74,52,80,56]},
+              {t:"corrida", p:[69,60,76,62]}]},
+    {cambios:{a:{10:[83,43],12:[80,48],13:[83,56],14:[81,62],15:[76,46]},
+              b:{11:[91,63],13:[92,57],15:[94,58]}},
+     pelota:[81,62],
+     nota:"El 13 lo pasa por afuera y el wing entra con el fullback pasado.",
+     flechas:[{t:"corrida", p:[81,62,96,66]}]}
+  ];
+
+  const armados = [];
+  let anterior = null;
+  for (const p of pasos){
+    const pos = anterior ? JSON.parse(JSON.stringify(anterior)) : p.pos;
+    if (p.cambios){
+      for (const eq in p.cambios)
+        for (const n in p.cambios[eq]) pos[eq + n] = p.cambios[eq][n].slice();
+    }
+    if (p.pelota) pos.pelota = p.pelota.slice();
+    armados.push({pos, nota:p.nota,
+      flechas:(p.flechas||[]).map((f,i)=>({id:"f"+armados.length+"_"+i, tipo:f.t,
+        x1:f.p[0], y1:f.p[1], x2:f.p[2], y2:f.p[3]}))});
+    anterior = pos;
+  }
+  return {id:null, nombre:"Salida de scrum por afuera", pasos:armados};
+}
+
+const paso = () => estado.jugada.pasos[estado.paso];
+const posiciones = () => paso().pos;
+
+function anotar(){                                   // punto de retorno para deshacer
+  historial.push(JSON.stringify({j:estado.jugada, p:estado.paso}));
+  if (historial.length > 60) historial.shift();
+  $("btn-deshacer").disabled = false;
+}
+function deshacer(){
+  const previo = historial.pop();
+  if (!previo) return;
+  const d = JSON.parse(previo);
+  estado.jugada = d.j; estado.paso = Math.min(d.p, d.j.pasos.length-1);
+  estado.seleccion = [];
+  $("btn-deshacer").disabled = historial.length === 0;
+  render();
+}
+
+/* ===================== Dibujo de fichas y flechas ===================== */
+function dibujarFichas(interpoladas){
+  const pos = interpoladas || posiciones();
+  const r = radioFicha();
+  capaFichas.textContent = "";
+  const frag = document.createDocumentFragment();
+
+  for (const equipo of ["a","b"]){
+    const tope = estado.enCancha[equipo];
+    for (let n = 1; n <= 15; n++){
+      if (n > tope) continue;
+      const clave = equipo + n, p = pos[clave];
+      if (!p) continue;
+      const enMano = arrastre && arrastre.clave === clave;
+      const rf = enMano ? r*1.22 : r;
+      const g = crear("g",{class:"ficha", "data-ficha":clave, tabindex:"-1"});
+      if (enMano) g.appendChild(crear("circle",{cx:p[0], cy:p[1], r:rf*1.7,
+        fill:"var(--cal)", opacity:.16}));
+      if (estado.seleccion.indexOf(clave) >= 0)
+        g.appendChild(crear("circle",{cx:p[0], cy:p[1], r:rf*1.42, fill:"none",
+          stroke:"var(--cuero)", "stroke-width":Math.max(rf*.22,.18)}));
+      g.appendChild(crear("circle",{cx:p[0], cy:p[1], r:rf,
+        fill: equipo === "a" ? "var(--propio)" : "var(--rival)",
+        stroke:"var(--cal)", "stroke-width":Math.max(rf*(enMano?.2:.14), .12),
+        "stroke-opacity":enMano?1:.92}));
+      const t = crear("text",{x:p[0], y:p[1], class:"num", fill:"var(--cal)",
+        "font-size": estado.verPuestos ? rf*0.82 : rf*1.15});
+      t.textContent = estado.verPuestos ? SIGLAS[n] : n;
+      if (estado.vertical) t.setAttribute("transform", `rotate(-90 ${p[0]} ${p[1]})`);
+      g.appendChild(t);
+      frag.appendChild(g);
+    }
+  }
+  const b = pos.pelota;
+  if (b){
+    const g = crear("g",{class:"ficha", "data-ficha":"pelota"});
+    const rp = r*.62 * (arrastre && arrastre.clave === "pelota" ? 1.25 : 1);
+    if (estado.seleccion.indexOf("pelota") >= 0)
+      g.appendChild(crear("circle",{cx:b[0], cy:b[1], r:rp*1.9, fill:"none",
+        stroke:"var(--cuero)", "stroke-width":Math.max(rp*.3,.18)}));
+    g.appendChild(crear("ellipse",{cx:b[0], cy:b[1], rx:rp, ry:rp*.62,
+      fill:"var(--cuero)", stroke:"#2A1B0C", "stroke-width":rp*.14,
+      transform:`rotate(-24 ${b[0]} ${b[1]})`}));
+    g.appendChild(crear("line",{x1:b[0]-rp*.45, y1:b[1]+rp*.2, x2:b[0]+rp*.45, y2:b[1]-rp*.2,
+      stroke:"#F6E7CE", "stroke-width":rp*.13, "stroke-linecap":"round"}));
+    frag.appendChild(g);
+  }
+  capaFichas.appendChild(frag);
+}
+
+/* ===================== Selección de varias fichas =====================
+   Marcadas en grupo, se mueven juntas: al arrastrar una, el desplazamiento se
+   aplica a todas por igual, y lo que se acota es el DESPLAZAMIENTO y no cada
+   ficha, para que el grupo no se deforme contra el borde de la cancha.      */
+function cajaSeleccion(){
+  const pos = posiciones(), xs = [], ys = [];
+  for (const k of estado.seleccion) if (pos[k]){ xs.push(pos[k][0]); ys.push(pos[k][1]); }
+  if (!xs.length) return null;
+  const m = radioFicha()*1.6;
+  return {x1:Math.min.apply(null,xs)-m, y1:Math.min.apply(null,ys)-m,
+          x2:Math.max.apply(null,xs)+m, y2:Math.max.apply(null,ys)+m};
+}
+function centroSeleccion(){
+  const c = cajaSeleccion();
+  return c ? [(c.x1+c.x2)/2, (c.y1+c.y2)/2] : null;
+}
+function tiradorGiro(){                       // girar de a una ficha no significa nada
+  const c = cajaSeleccion();
+  if (!c || estado.seleccion.length < 2) return null;
+  return [(c.x1+c.x2)/2, c.y1 - radioFicha()*2.4];
+}
+
+function dibujarSeleccion(){
+  capaSeleccion.textContent = "";
+  const g = document.createDocumentFragment();
+  if (marcando){
+    g.appendChild(crear("rect",{
+      x:Math.min(marcando.x1,marcando.x2), y:Math.min(marcando.y1,marcando.y2),
+      width:Math.abs(marcando.x2-marcando.x1), height:Math.abs(marcando.y2-marcando.y1),
+      fill:"var(--cal)", "fill-opacity":.14, stroke:"var(--cal)", "stroke-width":.32,
+      "stroke-dasharray":"1.6 1.2"}));
+  } else {
+    const c = cajaSeleccion();
+    if (c){
+      g.appendChild(crear("rect",{x:c.x1, y:c.y1, width:c.x2-c.x1, height:c.y2-c.y1, rx:1,
+        fill:"none", stroke:"var(--cuero)", "stroke-width":.32, "stroke-dasharray":"1.6 1.2"}));
+      const t = tiradorGiro();
+      if (t){
+        g.appendChild(crear("line",{x1:(c.x1+c.x2)/2, y1:c.y1, x2:t[0], y2:t[1],
+          stroke:"var(--cuero)", "stroke-width":.24}));
+        g.appendChild(crear("circle",{cx:t[0], cy:t[1], r:radioFicha()*.8,
+          fill:"var(--cuero)", stroke:"var(--cal)", "stroke-width":.22}));
+      }
+    }
+  }
+  capaSeleccion.appendChild(g);
+  const barra = $("barra-seleccion");
+  barra.hidden = estado.seleccion.length === 0;
+  $("cuenta-seleccion").textContent = estado.seleccion.length +
+    (estado.seleccion.length === 1 ? " ficha" : " fichas");
+}
+
+function soltarSeleccion(){
+  if (!estado.seleccion.length) return;
+  estado.seleccion = [];
+  dibujarSeleccion(); dibujarFichas();
+}
+
+const ESTILO_FLECHA = {
+  corrida:{color:"var(--cal)", guion:null, punta:"punta-corrida", grosor:.55},
+  pase:   {color:"var(--cuero)", guion:"1.6 1.3", punta:"punta-pase", grosor:.55},
+  patada: {color:"#F5D9A6", guion:"3.2 1.8", punta:"punta-patada", grosor:.6}
+};
+
+function dibujarFlechas(progreso){
+  capaFlechas.textContent = "";
+  const frag = document.createDocumentFragment();
+  for (const f of paso().flechas){
+    const e = ESTILO_FLECHA[f.tipo] || ESTILO_FLECHA.corrida;
+    const largo = Math.hypot(f.x2-f.x1, f.y2-f.y1);
+    const trazo = crear("line",{x1:f.x1, y1:f.y1, x2:f.x2, y2:f.y2,
+      stroke:e.color, "stroke-width":e.grosor, "stroke-linecap":"round",
+      "marker-end":`url(#${e.punta})`, "stroke-dasharray":e.guion});
+    if (progreso !== undefined && progreso < 1){
+      trazo.setAttribute("stroke-dasharray", largo);
+      trazo.setAttribute("stroke-dashoffset", largo * (1 - progreso));
+      trazo.removeAttribute("marker-end");
+    }
+    frag.appendChild(trazo);
+    if (progreso === undefined){
+      const zona = crear("line",{x1:f.x1, y1:f.y1, x2:f.x2, y2:f.y2, stroke:"transparent",
+        "stroke-width":2.4, "data-flecha":f.id, style:"cursor:pointer;pointer-events:stroke"});
+      frag.appendChild(zona);
+    }
+  }
+  capaFlechas.appendChild(frag);
+}
+
+function dibujarPasos(){
+  const cont = $("pasos"); cont.textContent = "";
+  estado.jugada.pasos.forEach((p, i)=>{
+    if (i) {
+      const s = document.createElement("span");
+      s.className = "flecha-paso"; s.textContent = "→"; s.setAttribute("aria-hidden","true");
+      cont.appendChild(s);
+    }
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "paso"; b.textContent = i+1;
+    b.setAttribute("aria-current", i === estado.paso ? "true" : "false");
+    b.title = p.nota || ("Paso " + (i+1));
+    b.addEventListener("click", ()=>{ estado.paso = i; render(); mirarCancha(); });
+    cont.appendChild(b);
+  });
+  $("btn-paso-borrar").disabled = estado.jugada.pasos.length <= 1;
+}
+
+/* En el celular los controles estan abajo de la cancha, que ocupa toda la pantalla.
+   Cualquier accion cuyo efecto se ve en el pasto sube sola.                      */
+function mirarCancha(){
+  if (estado.vertical && window.scrollY > 40)
+    window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function render(){
+  acomodar();
+  dibujarFichas();
+  dibujarFlechas();
+  dibujarSeleccion();
+  dibujarPasos();
+  $("nota").value = paso().nota || "";
+  $("rotulo-pasos").textContent = estado.jugada.nombre || "Pasos de la jugada";
+  $("pie-jugada").textContent = estado.jugada.nombre
+    ? estado.jugada.nombre + " · " + estado.jugada.pasos.length + " paso" + (estado.jugada.pasos.length>1?"s":"")
+    : "Jugada sin guardar";
+}
+
+/* ===================== Arrastrar y dibujar ===================== */
+function aCampo(ev){
+  const ctm = mundo.getScreenCTM();
+  if (!ctm) return [0,0];
+  const p = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(ctm.inverse());
+  return [p.x, p.y];
+}
+const acotar = (p)=>[Math.max(.6, Math.min(LARGO-.6, p[0])), Math.max(.6, Math.min(ANCHO-.6, p[1]))];
+
+let arrastre = null, trazando = null, trazoTemporal = null;
+
+function enCancha(clave){
+  if (clave === "pelota") return true;
+  return +clave.slice(1) <= estado.enCancha[clave[0]];
+}
+
+/* El dedo tapa la ficha, asi que en vez de pedir puntería se busca la que quedó
+   mas cerca del toque. La pelota gana los empates porque es la mas chica.      */
+function fichaCerca(punto){
+  const pos = posiciones(), tol = tolerancia(), r = radioFicha();
+  const aLaPelota = pos.pelota
+    ? Math.hypot(pos.pelota[0]-punto[0], pos.pelota[1]-punto[1]) : Infinity;
+  if (aLaPelota <= r*.8) return "pelota";        // el toque cayo sobre la pelota misma
+  let elegida = null, menor = Infinity;
+  for (const clave in pos){
+    if (clave === "pelota" || !enCancha(clave)) continue;
+    const p = pos[clave];
+    const d = Math.hypot(p[0]-punto[0], p[1]-punto[1]);
+    if (d < menor){ menor = d; elegida = clave; }
+  }
+  if (menor <= tol) return elegida;
+  return aLaPelota <= tol ? "pelota" : null;     // no habia nadie cerca: seria la pelota
+}
+
+const punteros = new Map();
+let pellizco = null, paneo = null, deslizo = null;
+const separacion = (a,b)=>Math.hypot(a[0]-b[0], a[1]-b[1]);
+const medio = (a,b)=>[(a[0]+b[0])/2, (a[1]+b[1])/2];
+
+function iniciarMarca(punto, ev){
+  paneo = null; deslizo = null;
+  marcando = {x1:punto[0], y1:punto[1], x2:punto[0], y2:punto[1]};
+  if (ev) capturar(ev);
+  dibujarSeleccion();
+}
+function cancelarEspera(){
+  if (esperaMarca){ clearTimeout(esperaMarca); esperaMarca = null; }
+}
+function cerrarMarca(){
+  const m = marcando; marcando = null;
+  if (!m) return;
+  if (Math.abs(m.x2-m.x1) < 2 && Math.abs(m.y2-m.y1) < 2){
+    estado.seleccion = [];                       // fue un toque suelto: suelta el grupo
+  } else {
+    const x1 = Math.min(m.x1,m.x2), x2 = Math.max(m.x1,m.x2);
+    const y1 = Math.min(m.y1,m.y2), y2 = Math.max(m.y1,m.y2);
+    const pos = posiciones();
+    estado.seleccion = Object.keys(pos).filter(k => enCancha(k) && pos[k] &&
+      pos[k][0] >= x1 && pos[k][0] <= x2 && pos[k][1] >= y1 && pos[k][1] <= y2);
+  }
+  dibujarSeleccion(); dibujarFichas();
+}
+
+function espejar(eje){
+  if (estado.seleccion.length < 2) return;
+  anotar();
+  const c = centroSeleccion(), pos = posiciones();
+  for (const k of estado.seleccion){
+    if (!pos[k]) continue;
+    pos[k] = acotar(eje === "largo" ? [2*c[0]-pos[k][0], pos[k][1]]
+                                    : [pos[k][0], 2*c[1]-pos[k][1]]);
+  }
+  dibujarFichas(); dibujarSeleccion();
+}
+
+function capturar(ev){
+  try { svg.setPointerCapture(ev.pointerId); } catch(e){ /* el navegador ya lo solto */ }
+}
+function soltarTodo(){
+  cancelarEspera();
+  marcando = null; rotando = null;
+  arrastre = null;
+  if (trazoTemporal){ trazoTemporal.remove(); trazoTemporal = null; }
+  trazando = null; paneo = null; deslizo = null;
+  dibujarFichas(); dibujarFlechas();
+}
+
+svg.addEventListener("pointerdown", (ev)=>{
+  if (estado.reproduciendo) return;
+  punteros.set(ev.pointerId, [ev.clientX, ev.clientY]);
+  if (punteros.size === 2){                       // arranca un pellizco
+    soltarTodo();
+    const dos = Array.from(punteros.values());
+    const c = aVista(medio(dos[0], dos[1]));
+    pellizco = {d0: separacion(dos[0], dos[1]), k0: vista.k,
+      m:[(c[0]-vista.x)/vista.k, (c[1]-vista.y)/vista.k]};
+    ev.preventDefault(); return;
+  }
+  if (punteros.size > 2) return;
+  const zonaFlecha = ev.target.closest("[data-flecha]");
+  if (zonaFlecha && estado.herramienta === "mover"){
+    anotar();
+    const id = zonaFlecha.getAttribute("data-flecha");
+    paso().flechas = paso().flechas.filter(f => f.id !== id);
+    dibujarFlechas();
+    return;
+  }
+  if (estado.herramienta === "mover"){
+    const punto = aCampo(ev);
+
+    const tira = tiradorGiro();                  // el tirador manda sobre las fichas
+    if (tira && Math.hypot(tira[0]-punto[0], tira[1]-punto[1]) <= tolerancia()){
+      anotar();
+      const c = centroSeleccion(), pos = posiciones(), base = {};
+      for (const k of estado.seleccion) if (pos[k]) base[k] = pos[k].slice();
+      rotando = {centro:c, base, ang0:Math.atan2(punto[1]-c[1], punto[0]-c[0])};
+      capturar(ev); ev.preventDefault(); return;
+    }
+
+    const clave = fichaCerca(punto);
+    if (!clave){
+      // Con mouse, arrastrar sobre pasto vacio marca un grupo. Con el dedo ese
+      // gesto ya baja la pagina o corre la cancha, asi que la marca sale de
+      // mantener apretado 350 ms sin mover: es el gesto de seleccion de siempre
+      // y no le saca nada a lo que ya andaba.
+      if (ev.pointerType === "mouse" && (vista.k === 1 || ev.shiftKey)){
+        iniciarMarca(punto, ev); ev.preventDefault(); return;
+      }
+      if (vista.k > 1){                            // con la cancha acercada, la corre
+        paneo = {px:[ev.clientX, ev.clientY], x0:vista.x, y0:vista.y};
+        capturar(ev); ev.preventDefault();
+      } else if (estado.vertical){
+        deslizo = {y0: ev.clientY, desde: window.scrollY};
+        capturar(ev);
+      }
+      if (ev.pointerType !== "mouse"){
+        desdePx = [ev.clientX, ev.clientY];
+        cancelarEspera();
+        esperaMarca = setTimeout(()=>{ esperaMarca = null; iniciarMarca(punto, null); }, 350);
+      }
+      return;
+    }
+    anotar();
+    // si el toque cayó adentro de la ficha, se mantiene la distancia al centro:
+    // así la ficha acompaña al dedo en vez de saltarle abajo
+    const pos = posiciones(), p = pos[clave];
+    const dentro = Math.hypot(p[0]-punto[0], p[1]-punto[1]) <= radioFicha();
+    // agarrar una ficha del grupo arrastra al grupo entero; una de afuera, lo suelta
+    const enGrupo = estado.seleccion.indexOf(clave) >= 0 && estado.seleccion.length > 1;
+    let base = null;
+    if (enGrupo){
+      base = {};
+      for (const k of estado.seleccion) if (pos[k]) base[k] = pos[k].slice();
+    } else if (estado.seleccion.length){
+      estado.seleccion = []; dibujarSeleccion();
+    }
+    arrastre = {clave, base, dx: dentro ? p[0]-punto[0] : 0, dy: dentro ? p[1]-punto[1] : 0};
+    dibujarFichas();
+    capturar(ev);
+    ev.preventDefault();
+  } else {
+    const p = acotar(aCampo(ev));
+    trazando = {tipo: estado.herramienta, x1:p[0], y1:p[1]};
+    const e = ESTILO_FLECHA[trazando.tipo];
+    trazoTemporal = crear("line",{x1:p[0], y1:p[1], x2:p[0], y2:p[1], stroke:e.color,
+      "stroke-width":e.grosor, "stroke-linecap":"round", "stroke-dasharray":e.guion, opacity:.85});
+    capaFlechas.appendChild(trazoTemporal);
+    capturar(ev);
+    ev.preventDefault();
+  }
+});
+
+svg.addEventListener("pointermove", (ev)=>{
+  if (punteros.has(ev.pointerId)) punteros.set(ev.pointerId, [ev.clientX, ev.clientY]);
+  if (pellizco && punteros.size >= 2){
+    const dos = Array.from(punteros.values());
+    const k = Math.min(ESCALA_MAX, Math.max(1, pellizco.k0 * separacion(dos[0],dos[1]) / pellizco.d0));
+    const c = aVista(medio(dos[0], dos[1]));
+    vista.k = k; vista.x = c[0] - k*pellizco.m[0]; vista.y = c[1] - k*pellizco.m[1];
+    acotarVista(); aplicarVista(); dibujarFichas(); dibujarFlechas();
+    ev.preventDefault(); return;
+  }
+  if (esperaMarca && desdePx &&
+      Math.hypot(ev.clientX-desdePx[0], ev.clientY-desdePx[1]) > 8) cancelarEspera();
+  if (marcando){
+    const q = aCampo(ev); marcando.x2 = q[0]; marcando.y2 = q[1];
+    dibujarSeleccion(); ev.preventDefault(); return;
+  }
+  if (rotando){
+    const q = aCampo(ev);
+    const giro = Math.atan2(q[1]-rotando.centro[1], q[0]-rotando.centro[0]) - rotando.ang0;
+    const cos = Math.cos(giro), sen = Math.sin(giro), pos = posiciones();
+    for (const k in rotando.base){
+      const dx = rotando.base[k][0]-rotando.centro[0], dy = rotando.base[k][1]-rotando.centro[1];
+      pos[k] = acotar([rotando.centro[0] + dx*cos - dy*sen,
+                       rotando.centro[1] + dx*sen + dy*cos]);
+    }
+    dibujarFichas(); dibujarSeleccion();
+    ev.preventDefault(); return;
+  }
+  if (deslizo){
+    window.scrollTo(0, Math.max(0, deslizo.desde - (ev.clientY - deslizo.y0)));
+    ev.preventDefault(); return;
+  }
+  if (paneo){
+    const v = caja(), porPixel = v[2] / (svg.clientWidth || 1);
+    vista.x = paneo.x0 + (ev.clientX - paneo.px[0]) * porPixel;
+    vista.y = paneo.y0 + (ev.clientY - paneo.px[1]) * porPixel;
+    acotarVista(); aplicarVista();
+    ev.preventDefault(); return;
+  }
+  if (arrastre){
+    const punto = aCampo(ev), pos = posiciones();
+    if (arrastre.base){
+      // se acota el DESPLAZAMIENTO, no cada ficha: asi el grupo no se deforma
+      const b = arrastre.base[arrastre.clave];
+      let dx = punto[0] + arrastre.dx - b[0], dy = punto[1] + arrastre.dy - b[1];
+      for (const k in arrastre.base){
+        dx = Math.min(Math.max(dx, .6 - arrastre.base[k][0]), LARGO-.6 - arrastre.base[k][0]);
+        dy = Math.min(Math.max(dy, .6 - arrastre.base[k][1]), ANCHO-.6 - arrastre.base[k][1]);
+      }
+      for (const k in arrastre.base)
+        pos[k] = [arrastre.base[k][0]+dx, arrastre.base[k][1]+dy];
+      dibujarSeleccion();
+    } else {
+      pos[arrastre.clave] = acotar([punto[0]+arrastre.dx, punto[1]+arrastre.dy]);
+    }
+    dibujarFichas();
+    ev.preventDefault();
+  } else if (trazando){
+    const p = acotar(aCampo(ev));
+    trazoTemporal.setAttribute("x2", p[0]); trazoTemporal.setAttribute("y2", p[1]);
+    trazando.x2 = p[0]; trazando.y2 = p[1];
+  }
+});
+
+function soltar(ev){
+  if (ev && ev.pointerId !== undefined) punteros.delete(ev.pointerId);
+  if (punteros.size < 2) pellizco = null;
+  paneo = null; deslizo = null;
+  cancelarEspera();
+  if (marcando) cerrarMarca();
+  if (rotando){ rotando = null; dibujarSeleccion(); }
+  if (arrastre){ arrastre = null; dibujarFichas(); dibujarSeleccion(); }
+  if (trazando){
+    trazoTemporal.remove(); trazoTemporal = null;
+    const t = trazando; trazando = null;
+    if (t.x2 !== undefined && Math.hypot(t.x2-t.x1, t.y2-t.y1) > 1.5){
+      anotar();
+      paso().flechas.push({id:"f"+Date.now()+Math.random().toString(36).slice(2,6),
+        tipo:t.tipo, x1:t.x1, y1:t.y1, x2:t.x2, y2:t.y2});
+    }
+    dibujarFlechas();
+  }
+  try {
+    if (ev && ev.pointerId !== undefined && svg.hasPointerCapture(ev.pointerId))
+      svg.releasePointerCapture(ev.pointerId);
+  } catch(e){ /* nada que soltar */ }
+}
+svg.addEventListener("pointerup", soltar);
+svg.addEventListener("pointercancel", soltar);
+
+/* ===================== Pasos ===================== */
+$("btn-paso-nuevo").addEventListener("click", ()=>{
+  anotar();
+  const copia = JSON.parse(JSON.stringify(paso()));
+  copia.flechas = []; copia.nota = "";
+  estado.jugada.pasos.splice(estado.paso+1, 0, copia);
+  estado.paso++;
+  render(); mirarCancha();
+});
+$("btn-paso-borrar").addEventListener("click", ()=>{
+  if (estado.jugada.pasos.length <= 1) return;
+  anotar();
+  estado.jugada.pasos.splice(estado.paso, 1);
+  estado.paso = Math.max(0, estado.paso-1);
+  render();
+});
+$("nota").addEventListener("input", (e)=>{ paso().nota = e.target.value; });
+$("btn-sin-flechas").addEventListener("click", ()=>{ anotar(); paso().flechas = []; dibujarFlechas(); });
+$("btn-deshacer").addEventListener("click", deshacer);
+$("btn-deshacer").disabled = true;
+
+/* ===================== Reproducción ===================== */
+const quietito = window.matchMedia("(prefers-reduced-motion: reduce)");
+let rafId = null;
+
+function cartel(texto){
+  const c = $("cartel");
+  if (texto){ c.textContent = texto; c.hidden = false; } else c.hidden = true;
+}
+
+function tramo(i, ms){
+  return new Promise((listo)=>{
+    const desde = estado.jugada.pasos[i].pos, hasta = estado.jugada.pasos[i+1].pos;
+    estado.paso = i; dibujarPasos(); cartel(estado.jugada.pasos[i].nota);
+    if (quietito.matches){
+      dibujarFichas(hasta); dibujarFlechas(1);
+      setTimeout(listo, ms*0.7); return;
+    }
+    const t0 = performance.now();
+    const marco = (t)=>{
+      if (!estado.reproduciendo){ listo(); return; }
+      const k = Math.min(1, (t-t0)/ms);
+      const e = k < .5 ? 4*k*k*k : 1 - Math.pow(-2*k+2, 3)/2;
+      const mezcla = {};
+      for (const clave in hasta){
+        const b = hasta[clave], a = desde[clave] || b;
+        mezcla[clave] = [a[0]+(b[0]-a[0])*e, a[1]+(b[1]-a[1])*e];
+      }
+      dibujarFichas(mezcla);
+      dibujarFlechas(Math.min(1, k*1.3));
+      if (k < 1) rafId = requestAnimationFrame(marco); else listo();
+    };
+    rafId = requestAnimationFrame(marco);
+  });
+}
+
+async function reproducir(){
+  if (estado.reproduciendo) return parar();
+  if (estado.jugada.pasos.length < 2) return;
+  estado.seleccion = [];
+  mirarCancha();
+  estado.reproduciendo = true;
+  document.querySelector(".escena").classList.add("en-vivo");
+  $("btn-reproducir").textContent = "■ Parar";
+  const ms = parseInt($("velocidad").value, 10);
+  for (let i = 0; i < estado.jugada.pasos.length-1; i++){
+    if (!estado.reproduciendo) break;
+    await tramo(i, ms);
+  }
+  if (estado.reproduciendo){
+    estado.paso = estado.jugada.pasos.length-1;
+    cartel(paso().nota);
+    setTimeout(()=>cartel(null), 2600);
+  }
+  parar(true);
+}
+function parar(suave){
+  estado.reproduciendo = false;
+  document.querySelector(".escena").classList.remove("en-vivo");
+  if (rafId) cancelAnimationFrame(rafId);
+  $("btn-reproducir").textContent = "▶ Reproducir";
+  if (!suave) cartel(null);
+  render();
+}
+$("btn-reproducir").addEventListener("click", reproducir);
+
+/* ===================== Formaciones y plantel ===================== */
+document.querySelectorAll("#herramientas .btn").forEach(b=>{
+  b.addEventListener("click", ()=>{
+    estado.herramienta = b.getAttribute("data-herr");
+    document.querySelectorAll("#herramientas .btn").forEach(o=>
+      o.setAttribute("aria-pressed", o === b ? "true" : "false"));
+    svg.classList.toggle("dibujando", estado.herramienta !== "mover");
+  });
+});
+
+document.querySelectorAll("#formaciones .btn").forEach(b=>{
+  b.addEventListener("click", ()=>{
+    anotar();
+    estado.seleccion = [];
+    Object.assign(posiciones(), ubicarFormacion(b.getAttribute("data-form"),
+      $("equipo-formacion").value, $("lugar-largo").value, $("lugar-ancho").value,
+      +$("cantidad-line").value));
+    render(); mirarCancha();
+  });
+});
+
+$("btn-pista").addEventListener("click", ()=>{
+  $("barra-acciones").scrollIntoView({behavior:"smooth", block:"start"});
+});
+window.addEventListener("scroll", ()=>{ $("btn-pista").hidden = window.scrollY > 40; },
+  {passive:true});
+
+$("btn-soltar").addEventListener("click", soltarSeleccion);
+$("btn-espejo-ancho").addEventListener("click", ()=>espejar("ancho"));
+$("btn-espejo-largo").addEventListener("click", ()=>espejar("largo"));
+
+$("btn-mas").addEventListener("click", ()=>acercar(1.5));
+$("btn-menos").addEventListener("click", ()=>acercar(1/1.5));
+
+$("btn-inicio").addEventListener("click", ()=>{
+  if (estado.reproduciendo) parar();
+  anotar();
+  const pos = posiciones();
+  Object.assign(pos, ubicarFormacion("salida", "a", "mitad", "centro"));
+  render(); mirarCancha();
+});
+
+$("cantidad-a").addEventListener("change", e=>{ estado.enCancha.a = +e.target.value; dibujarFichas(); });
+$("cantidad-b").addEventListener("change", e=>{ estado.enCancha.b = +e.target.value; dibujarFichas(); });
+$("tamano-ficha").addEventListener("change", (e)=>{
+  estado.tamano = e.target.value;
+  try { localStorage.setItem("pizarraxv:tamano", estado.tamano); } catch(err){}
+  dibujarFichas();
+});
+
+$("ver-puestos").addEventListener("change", e=>{ estado.verPuestos = e.target.checked; dibujarFichas(); });
+
+(function plantel(){
+  const cont = $("plantel");
+  for (let n = 1; n <= 15; n++){
+    const d = document.createElement("div");
+    d.className = "puesto";
+    d.innerHTML = "<b></b><span></span>";
+    d.querySelector("b").textContent = n;
+    d.querySelector("span").textContent = PUESTOS[n];
+    cont.appendChild(d);
+  }
+})();
+
+/* ===================== Dónde se guardan las jugadas =====================
+   Si la página corre con base compartida, las jugadas quedan ahí y las ve
+   cualquiera que abra el link. Si no, quedan en este navegador.          */
+const CLAVE_LOCAL = "pizarraxv:jugadas";
+const almacen = {
+  db:null, col:null, compartido:false,
+
+  async iniciar(){
+    try {
+      this.db = window.claude && window.claude.use ? await window.claude.use("db") : null;
+    } catch(e){ this.db = null; }
+    if (this.db){
+      this.col = this.db.collection("jugadas");
+      this.compartido = true;
+      this.col.orderBy("actualizado","desc").limit(60).onSnapshot(
+        (snap)=> pintarBiblioteca(snap.docs.map(d=>Object.assign({id:d.id}, d.data()))),
+        ()=>{ this.compartido = false; this.db = null; this.col = null; this.refrescar(); });
+      $("pie-almacen").textContent = "Se guardan en el tablero: las ve cualquiera que abra este link.";
+    } else {
+      $("pie-almacen").textContent = "Se guardan en este navegador.";
+      this.refrescar();
+    }
+  },
+
+  async refrescar(){
+    if (this.col){
+      try {
+        const snap = await this.col.orderBy("actualizado","desc").limit(60).get();
+        return pintarBiblioteca(snap.docs.map(d=>Object.assign({id:d.id}, d.data())));
+      } catch(e){ /* cae al listado local */ }
+    }
+    pintarBiblioteca(this.leerLocal());
+  },
+
+  leerLocal(){
+    try { return JSON.parse(localStorage.getItem(CLAVE_LOCAL) || "[]"); }
+    catch(e){ return []; }
+  },
+  escribirLocal(lista){
+    try { localStorage.setItem(CLAVE_LOCAL, JSON.stringify(lista)); } catch(e){}
+  },
+
+  async guardar(nombre, jugada){
+    const cuerpo = {nombre, datos: JSON.stringify(jugada.pasos),
+      cantidad: jugada.pasos.length, actualizado: Date.now()};
+    if (this.col){
+      const ref = jugada.id ? this.col.doc(jugada.id) : this.col.doc();
+      await ref.set(cuerpo);
+      return ref.id;
+    }
+    const lista = this.leerLocal();
+    const id = jugada.id || ("j" + Date.now());
+    const i = lista.findIndex(x=>x.id === id);
+    const fila = Object.assign({id}, cuerpo);
+    if (i >= 0) lista[i] = fila; else lista.unshift(fila);
+    this.escribirLocal(lista);
+    this.refrescar();
+    return id;
+  },
+
+  async borrar(id){
+    if (this.col){ await this.col.doc(id).delete(); return this.refrescar(); }
+    this.escribirLocal(this.leerLocal().filter(x=>x.id !== id));
+    this.refrescar();
+  }
+};
+
+function pintarBiblioteca(lista){
+  const cont = $("biblioteca"); cont.textContent = "";
+  if (!lista.length){
+    const p = document.createElement("p");
+    p.className = "vacio"; p.textContent = "Todavía no guardaste ninguna jugada.";
+    cont.appendChild(p); return;
+  }
+  lista.sort((a,b)=>(b.actualizado||0)-(a.actualizado||0));
+  for (const fila of lista){
+    const item = document.createElement("div"); item.className = "item";
+    const abrir = document.createElement("button");
+    abrir.type = "button"; abrir.className = "nom"; abrir.textContent = fila.nombre || "Sin nombre";
+    abrir.title = "Abrir “" + (fila.nombre||"") + "”";
+    abrir.addEventListener("click", ()=>abrirJugada(fila));
+    const cnt = document.createElement("span");
+    cnt.className = "cnt"; cnt.textContent = (fila.cantidad||"?") + " pasos";
+    const borrar = document.createElement("button");
+    borrar.type = "button"; borrar.className = "btn chico quieto"; borrar.textContent = "Borrar";
+    borrar.addEventListener("click", async ()=>{
+      if (!confirm("¿Borrar “" + (fila.nombre||"") + "”?")) return;
+      await almacen.borrar(fila.id);
+      if (estado.jugada.id === fila.id) estado.jugada.id = null;
+    });
+    item.append(abrir, cnt, borrar);
+    cont.appendChild(item);
+  }
+}
+
+function abrirJugada(fila){
+  let pasos;
+  try { pasos = JSON.parse(fila.datos); } catch(e){ alert("Esa jugada no se pudo leer."); return; }
+  if (!Array.isArray(pasos) || !pasos.length){ alert("Esa jugada no tiene pasos."); return; }
+  anotar();
+  estado.jugada = {id: fila.id, nombre: fila.nombre, pasos};
+  estado.paso = 0;
+  $("nombre-jugada").value = fila.nombre || "";
+  render();
+}
+
+$("btn-guardar").addEventListener("click", async ()=>{
+  const nombre = ($("nombre-jugada").value || "").trim() || estado.jugada.nombre;
+  if (!nombre){ $("nombre-jugada").focus(); return; }
+  const boton = $("btn-guardar");
+  boton.disabled = true; boton.textContent = "Guardando…";
+  try {
+    estado.jugada.nombre = nombre;
+    estado.jugada.id = await almacen.guardar(nombre, estado.jugada);
+    boton.textContent = "Guardada";
+    render();
+    setTimeout(()=>{ boton.textContent = "Guardar"; }, 1400);
+  } catch(e){
+    boton.textContent = "Guardar";
+    alert("No se pudo guardar: " + (e && e.message ? e.message : "probá de nuevo."));
+  } finally { boton.disabled = false; }
+});
+
+/* ===================== Bajar la jugada como imagen ===================== */
+(async function png(){
+  /* Adentro de Claude la bajada la hace la plataforma; servida como pagina comun
+     —Vercel, GitHub Pages— alcanza con un enlace de descarga de toda la vida.  */
+  const enClaude = !!(window.claude && window.claude.use);
+  let bajadas = null;
+  try { bajadas = enClaude ? await window.claude.use("downloads") : null; }
+  catch(e){ bajadas = null; }
+  if (enClaude && !bajadas) return;              // la plataforma no la habilito
+  const boton = $("btn-png"); boton.hidden = false;
+  boton.addEventListener("click", async ()=>{
+    boton.disabled = true;
+    try {
+      const blob = await aImagen();
+      const base = (estado.jugada.nombre || "jugada").replace(/[^\wáéíóúñÁÉÍÓÚÑ -]/g,"").trim() || "jugada";
+      const nombre = base + " - paso " + (estado.paso+1) + ".png";
+      if (bajadas) await bajadas.save({filename: nombre, data: blob});
+      else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = nombre;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url), 1000);
+      }
+    } catch(e){
+      if (!e || e.code !== "declined") alert("No se pudo armar la imagen.");
+    } finally { boton.disabled = false; }
+  });
+})();
+
+function aImagen(){
+  const cs = getComputedStyle(document.documentElement);
+  const tokens = ["--cesped","--cesped-2","--ingoal","--cal","--propio","--rival","--cuero"];
+  const clon = svg.cloneNode(true);
+  clon.setAttribute("xmlns", NS);
+  const estilo = document.createElementNS(NS, "style");
+  estilo.textContent = "svg{" + tokens.map(t=>t+":"+cs.getPropertyValue(t).trim()).join(";") + "}" +
+    ".num{font-family:'IBM Plex Sans Condensed','Arial Narrow',sans-serif;font-weight:700;" +
+    "text-anchor:middle;dominant-baseline:central}" +
+    ".marca-metros{font-family:'IBM Plex Sans Condensed',sans-serif;font-weight:600;" +
+    "fill:" + cs.getPropertyValue("--cal").trim() + ";opacity:.5;text-anchor:middle}";
+  clon.insertBefore(estilo, clon.firstChild);
+  const caja = clon.getAttribute("viewBox").split(" ").map(Number);
+  const escala = 1500 / caja[2];
+  const ancho = Math.round(caja[2]*escala), alto = Math.round(caja[3]*escala);
+  const texto = new XMLSerializer().serializeToString(clon);
+  const url = URL.createObjectURL(new Blob([texto], {type:"image/svg+xml;charset=utf-8"}));
+  return new Promise((listo, error)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const lienzo = document.createElement("canvas");
+      lienzo.width = ancho; lienzo.height = alto;
+      const ctx = lienzo.getContext("2d");
+      ctx.fillStyle = cs.getPropertyValue("--fondo").trim() || "#fff";
+      ctx.fillRect(0,0,ancho,alto);
+      ctx.drawImage(img, 0, 0, ancho, alto);
+      URL.revokeObjectURL(url);
+      lienzo.toBlob(b => b ? listo(b) : error(new Error("sin imagen")), "image/png");
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); error(new Error("no cargó")); };
+    img.src = url;
+  });
+}
+
+/* ===================== Tema, atajos y arranque ===================== */
+$("btn-tema").addEventListener("click", ()=>{
+  const oscuro = matchMedia("(prefers-color-scheme: dark)").matches;
+  const actual = document.documentElement.getAttribute("data-theme") || (oscuro ? "dark" : "light");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  try { localStorage.setItem("pizarraxv:tema", nuevo); } catch(e){}
+});
+try {
+  const t = localStorage.getItem("pizarraxv:tema");
+  if (t) document.documentElement.setAttribute("data-theme", t);
+} catch(e){}
+
+document.addEventListener("keydown", (ev)=>{
+  const foco = document.activeElement;
+  if (foco && /^(INPUT|SELECT|TEXTAREA)$/.test(foco.tagName)) return;
+  const teclas = {"1":"mover","2":"corrida","3":"pase","4":"patada"};
+  if (ev.key === " "){ ev.preventDefault(); reproducir(); }
+  else if (ev.key === "ArrowRight" && estado.paso < estado.jugada.pasos.length-1){ estado.paso++; render(); }
+  else if (ev.key === "ArrowLeft" && estado.paso > 0){ estado.paso--; render(); }
+  else if (ev.key === "n" || ev.key === "N") $("btn-paso-nuevo").click();
+  else if (ev.key === "z" || ev.key === "Z") deshacer();
+  else if (ev.key === "Escape") soltarSeleccion();
+  else if (teclas[ev.key]) document.querySelector('[data-herr="'+teclas[ev.key]+'"]').click();
+});
+
+let temporizador = null;
+window.addEventListener("resize", ()=>{
+  clearTimeout(temporizador);
+  temporizador = setTimeout(()=>{ if (!estado.reproduciendo) render(); }, 150);
+});
+
+function arrancar(guardado){
+  estado.jugada = (guardado && guardado.jugada) || jugadaDeEjemplo();
+  estado.paso = Math.min(guardado && guardado.paso || 0, estado.jugada.pasos.length-1);
+  if (guardado && guardado.enCancha){
+    estado.enCancha = guardado.enCancha;
+    $("cantidad-a").value = guardado.enCancha.a;
+    $("cantidad-b").value = guardado.enCancha.b;
+  }
+  try {
+    const t = localStorage.getItem("pizarraxv:tamano");
+    if (t && FACTOR_FICHA[t]){ estado.tamano = t; $("tamano-ficha").value = t; }
+  } catch(e){}
+  $("nombre-jugada").value = estado.jugada.nombre || "";
+  render();
+  almacen.iniciar();
+}
+
+const hot = window.claude && window.claude.hot;
+if (hot && hot.snapshot) hot.snapshot(()=>({jugada: estado.jugada, paso: estado.paso, enCancha: estado.enCancha}));
+if (hot && hot.ready) hot.ready(arrancar); else arrancar(hot && hot.data);
+
+})();
+</script>
+
+</body>
+</html>
