@@ -782,11 +782,28 @@ function duenoDerivado(paso){        // para jugadas guardadas antes de que exis
   return jugadorCerca(paso.pos, paso.pos.pelota, 3);
 }
 
-function jugadaDeEjemplo(){
-  const base = ubicarFormacion("scrum", "a", [85,30], "centro");
+/* Las jugadas escritas a mano se arman con cambios sobre el paso anterior: solo
+   se nombra al que se movio, y la pelota se acomoda sola al que la lleva.     */
+function armarPasos(base, pasos){
+  const armados = [];
+  let anterior = null;
+  for (const p of pasos){
+    const pos = anterior ? JSON.parse(JSON.stringify(anterior)) : base;
+    for (const eq in (p.cambios || {}))
+      for (const n in p.cambios[eq]) pos[eq + n] = p.cambios[eq][n].slice();
+    pegarPelota(pos, p.dueno);
+    armados.push({pos, nota:p.nota, dueno:p.dueno,
+      flechas:(p.flechas || []).map((f,i)=>({id:"f"+armados.length+"_"+i, tipo:f.t,
+        x1:f.p[0], y1:f.p[1], x2:f.p[2], y2:f.p[3]}))});
+    anterior = pos;
+  }
+  return armados;
+}
 
-  const pasos = [
-    {pos: base, dueno:"a9",
+function jugadaDeEjemplo(){
+  return {id:null, nombre:"Salida de scrum por afuera",
+    pasos: armarPasos(ubicarFormacion("scrum", "a", [85,30], "centro"), [
+    {dueno:"a9",
      nota:"Scrum nuestro a 22 del ingoal. El 8 la controla, el 9 la espera.",
      flechas:[{t:"pase", p:[82,24.5,71,35]}, {t:"corrida", p:[71,35,75,39]}]},
     {cambios:{a:{9:[80,26],10:[79,37],12:[76,42],13:[73,47],14:[68,55],15:[67,36]},
@@ -805,24 +822,66 @@ function jugadaDeEjemplo(){
      dueno:"a14",
      nota:"El 13 lo pasa por afuera y el wing entra con el fullback pasado.",
      flechas:[{t:"corrida", p:[81,62,96,66]}]}
-  ];
-
-  const armados = [];
-  let anterior = null;
-  for (const p of pasos){
-    const pos = anterior ? JSON.parse(JSON.stringify(anterior)) : p.pos;
-    if (p.cambios){
-      for (const eq in p.cambios)
-        for (const n in p.cambios[eq]) pos[eq + n] = p.cambios[eq][n].slice();
-    }
-    pegarPelota(pos, p.dueno);
-    armados.push({pos, nota:p.nota, dueno:p.dueno,
-      flechas:(p.flechas||[]).map((f,i)=>({id:"f"+armados.length+"_"+i, tipo:f.t,
-        x1:f.p[0], y1:f.p[1], x2:f.p[2], y2:f.p[3]}))});
-    anterior = pos;
-  }
-  return {id:null, nombre:"Salida de scrum por afuera", pasos:armados};
+  ])};
 }
+
+/* Line completo en la mitad. El 9 saltea al 10, el 12 y el 13 avanzan juntos, el
+   10 aparece por detras y recibe el pase atras, endereza y la abre al 15, que
+   entra derecho y es el UNICO que llega a la defensa: ahi juega el dos contra
+   uno con el wing. Todos los pases pasan antes de la linea defensiva.        */
+function jugadaDelLine(){
+  const base = ubicarFormacion("line", "a", [60,0], "izq", 7);
+  base.a12 = [47,20]; base.a13 = [45,28]; base.a10 = [43,14];
+  base.a15 = [37,42]; base.a14 = [34,60]; base.a11 = [46,5];
+
+  return {id:null, nombre:"Line en la mitad, 2 contra 1 por afuera",
+    pasos: armarPasos(base, [
+    {dueno:"a9",
+     nota:"Line completo en la mitad. El 9 saltea al 10 y la juega derecho al 12.",
+     flechas:[{t:"pase", p:[53,9,47,20]}, {t:"corrida", p:[43,14,47,31]}]},
+
+    {cambios:{a:{12:[52,22],13:[50,30],10:[47,31],9:[50,12],15:[40,44],14:[36,60],11:[47,6]},
+              b:{10:[68,28],12:[68,38],13:[68,47],11:[68,19],9:[64,10]}},
+     dueno:"a12",
+     nota:"El 12 y el 13 avanzan juntos; el 10 aparece por detras de los dos.",
+     flechas:[{t:"pase", p:[52,22,47,31]}, {t:"corrida", p:[50,30,56,33]}]},
+
+    {cambios:{a:{10:[54,31],12:[57,23],13:[57,34],15:[45,45],14:[40,60],9:[53,20]},
+              b:{10:[66,29],12:[66,39],13:[66,48],11:[66,20]}},
+     dueno:"a10",
+     nota:"El 10 la toma atras del 12 y endereza la carrera en vez de abrirse.",
+     flechas:[{t:"corrida", p:[54,31,60,31]}]},
+
+    {cambios:{a:{10:[60,31],12:[60,24],13:[60,35],15:[52,45],14:[44,60],9:[56,24]},
+              b:{10:[65,30],12:[65,40],13:[65,48],11:[65,21],14:[76,60],15:[85,25]}},
+     dueno:"a10",
+     nota:"Con la defensa fijada adentro, la abre al 15 que ya viene lanzado.",
+     flechas:[{t:"pase", p:[60,31,52,45]}, {t:"corrida", p:[52,45,63,47]},
+              {t:"corrida", p:[44,60,55,62]}]},
+
+    {cambios:{a:{15:[56,45],14:[54,60],10:[62,32],12:[62,25],13:[62,36]},
+              b:{12:[62,36],13:[63,43],14:[73,57]}},
+     dueno:"a15",
+     nota:"El 15 entra derecho con el wing por afuera: es el unico que llega a la linea.",
+     flechas:[{t:"corrida", p:[56,45,67,47]}, {t:"corrida", p:[54,60,64,60]}]},
+
+    {cambios:{a:{15:[68,48],14:[65,59],10:[66,34],13:[64,30]},
+              b:{12:[60,33],13:[62,38],14:[73,56]}},
+     dueno:"a15",
+     nota:"Dos contra uno: pasados los de adentro, el 15 va sobre el wing para fijarlo.",
+     flechas:[{t:"corrida", p:[68,48,72,54]}, {t:"pase", p:[72,54,66,59]}]},
+
+    {cambios:{a:{15:[73,55],14:[70,61]}, b:{14:[74,52]}},
+     dueno:"a14",
+     nota:"El wing la recibe con el hueco por afuera y se va al ingoal.",
+     flechas:[{t:"corrida", p:[70,61,106,65]}]}
+  ])};
+}
+
+const JUGADAS_INCLUIDAS = [
+  {nombre:"Salida de scrum por afuera", armar: jugadaDeEjemplo},
+  {nombre:"Line en la mitad, 2 contra 1 por afuera", armar: jugadaDelLine}
+];
 
 const paso = () => estado.jugada.pasos[estado.paso];
 const posiciones = () => paso().pos;
@@ -1538,13 +1597,28 @@ const almacen = {
   }
 };
 
+function abrirIncluida(inc){
+  anotar();
+  estado.jugada = inc.armar();
+  estado.paso = 0; estado.seleccion = [];
+  $("nombre-jugada").value = estado.jugada.nombre;
+  render(); mirarCancha();
+}
+
 function pintarBiblioteca(lista){
   const cont = $("biblioteca"); cont.textContent = "";
-  if (!lista.length){
-    const p = document.createElement("p");
-    p.className = "vacio"; p.textContent = "Todavía no guardaste ninguna jugada.";
-    cont.appendChild(p); return;
+  for (const inc of JUGADAS_INCLUIDAS){      // las que vienen con la pizarra
+    const item = document.createElement("div"); item.className = "item";
+    const abrir = document.createElement("button");
+    abrir.type = "button"; abrir.className = "nom"; abrir.textContent = inc.nombre;
+    abrir.title = "Abrir “" + inc.nombre + "”";
+    abrir.addEventListener("click", ()=>abrirIncluida(inc));
+    const et = document.createElement("span");
+    et.className = "cnt"; et.textContent = "incluida";
+    item.append(abrir, et);
+    cont.appendChild(item);
   }
+  if (!lista.length) return;
   lista.sort((a,b)=>(b.actualizado||0)-(a.actualizado||0));
   for (const fila of lista){
     const item = document.createElement("div"); item.className = "item";
@@ -1692,7 +1766,7 @@ window.addEventListener("resize", ()=>{
 });
 
 function arrancar(guardado){
-  estado.jugada = (guardado && guardado.jugada) || jugadaDeEjemplo();
+  estado.jugada = (guardado && guardado.jugada) || jugadaDelLine();
   estado.paso = Math.min(guardado && guardado.paso || 0, estado.jugada.pasos.length-1);
   if (guardado && guardado.enCancha){
     estado.enCancha = guardado.enCancha;
