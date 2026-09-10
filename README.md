@@ -26,11 +26,13 @@ que se guardan por pasos y se reproducen con la pelota moviendose sola.
 
 Vienen dos armadas, siempre disponibles en la biblioteca:
 
-- **Line en la mitad, 2 contra 1 por afuera** (7 pasos). Line completo, el 9 saltea
-  al 10 y juega al 12, que avanza con el 13; el 10 aparece por detras, recibe el
-  pase atras, endereza la carrera y la abre al 15. Todos los pases pasan antes de
-  la linea defensiva: el 15 es el unico que llega a la defensa y ahi juega el dos
-  contra uno con el wing.
+- **Line en la mitad, 2 contra 1 por afuera** (7 pasos). Nadie se corre de su
+  canal: cada uno arranca enfrentado a su par —el 10 al 10, el 12 al 12, el 13 al
+  13— y la jugada sucede sobre eso. El 9 la saltea por encima del 10 y va al 12,
+  que avanza con el 13; el 10 aparece por detras, recibe el pase atras, endereza
+  la carrera y la abre al 15. Todos los pases pasan antes de la linea defensiva:
+  el 15 es el unico que llega a la defensa y ahi juega el dos contra uno con el
+  wing.
 - **Salida de scrum por afuera** (4 pasos).
 
 ## Como se usa

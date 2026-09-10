@@ -830,55 +830,55 @@ function jugadaDeEjemplo(){
    entra derecho y es el UNICO que llega a la defensa: ahi juega el dos contra
    uno con el wing. Todos los pases pasan antes de la linea defensiva.        */
 function jugadaDelLine(){
+  /* NADIE se corre del despliegue: cada uno arranca en su canal, enfrentado a su
+     par —el 10 al 10, el 12 al 12, el 13 al 13—, y la jugada sucede sobre eso.
+     Por eso el del 9 al 12 es un pase salteado y largo: es lo que mide la cancha
+     entre la base del line y el segundo centro. Correr al 12 hacia adentro para
+     acortarlo lo dejaria atacando al 10 contrario, que es justo lo que se busca
+     evitar.                                                                   */
   const base = ubicarFormacion("line", "a", [60,0], "izq", 7);
-  /* Del despliegue del line solo se corren tres: el 12 entra al canal del primer
-     receptor —por eso el 9 lo busca salteando al 10—, el 13 se le pone al lado y
-     el 10 se para por dentro y mas profundo, que es de donde va a salir para
-     aparecer por detras de los dos. El 15 y el 14 quedan donde los deja la
-     formacion, bien abiertos: el 15 entra desde el fondo.                     */
-  base.a12 = [46.5,26]; base.a13 = [43,34]; base.a10 = [42,22]; base.a11 = [40,14];
 
   return {id:null, nombre:"Line en la mitad, 2 contra 1 por afuera",
     pasos: armarPasos(base, [
     {dueno:"a9",
-     nota:"Line completo en la mitad. El 9 saltea al 10 y la juega derecho al 12.",
-     flechas:[{t:"pase", p:[53,9,46.5,26]}, {t:"corrida", p:[42,22,45,30]}]},
+     nota:"Line completo en la mitad. El 9 la saltea por encima del 10 y va al 12.",
+     flechas:[{t:"pase", p:[53,9,41,35]}, {t:"corrida", p:[46.5,26,44,40]}]},
 
-    {cambios:{a:{12:[52,27],13:[49,35],10:[45,30],9:[50,14],15:[39,46],14:[35,60],11:[43,12]},
+    {cambios:{a:{12:[47,36],13:[45,45],10:[39,42],9:[50,14],15:[35,52],14:[34,60],11:[42,20]},
               b:{10:[68,28],12:[68,38],13:[68,47],11:[68,19],9:[64,10]}},
      dueno:"a12",
      nota:"El 12 y el 13 avanzan juntos; el 10 aparece por detras de los dos.",
-     flechas:[{t:"pase", p:[52,27,45,30]}, {t:"corrida", p:[49,35,55,37]}]},
+     flechas:[{t:"pase", p:[47,36,39,42]}, {t:"corrida", p:[45,45,52,46]}]},
 
-    {cambios:{a:{10:[50,30],12:[57,27],13:[55,37],15:[43,47],14:[38,60],9:[52,22]},
+    {cambios:{a:{10:[45,42],12:[52,35],13:[51,46],15:[38,52],14:[36,60],9:[48,26]},
               b:{10:[66,29],12:[66,39],13:[66,48],11:[66,20]}},
      dueno:"a10",
      nota:"El 10 la toma atras del 12 y endereza la carrera en vez de abrirse.",
-     flechas:[{t:"corrida", p:[50,30,57,30]}]},
+     flechas:[{t:"corrida", p:[45,42,52,42]}]},
 
-    {cambios:{a:{10:[57,30],12:[63,26],13:[60,37],15:[52,45],14:[43,60],9:[55,24]},
+    {cambios:{a:{10:[52,42],12:[58,33],13:[57,46],15:[45,53],14:[40,60],9:[50,34]},
               b:{10:[65,30],12:[65,40],13:[65,48],11:[65,21],14:[76,60],15:[85,25]}},
      dueno:"a10",
-     nota:"Con la defensa fijada adentro, la abre al 15 que ya viene lanzado.",
-     flechas:[{t:"pase", p:[57,30,52,45]}, {t:"corrida", p:[52,45,63,47]},
-              {t:"corrida", p:[43,60,54,61]}]},
+     nota:"Con los de adentro fijados en su marca, la abre al 15 que viene lanzado.",
+     flechas:[{t:"pase", p:[52,42,45,53]}, {t:"corrida", p:[45,53,56,55]},
+              {t:"corrida", p:[40,60,51,61]}]},
 
-    {cambios:{a:{15:[56,45],14:[54,60],10:[60,31],12:[64,25],13:[62,36]},
-              b:{12:[62,36],13:[63,43],14:[73,57]}},
+    {cambios:{a:{15:[50,53],14:[50,60],10:[56,43],12:[61,32],13:[60,45]},
+              b:{12:[62,38],13:[63,45],14:[73,57]}},
      dueno:"a15",
      nota:"El 15 entra derecho con el wing por afuera: es el unico que llega a la linea.",
-     flechas:[{t:"corrida", p:[56,45,67,47]}, {t:"corrida", p:[54,60,64,60]}]},
+     flechas:[{t:"corrida", p:[50,53,64,55]}, {t:"corrida", p:[50,60,62,61]}]},
 
-    {cambios:{a:{15:[68,48],14:[65,59],10:[64,33],13:[64,40]},
-              b:{12:[60,33],13:[62,38],14:[73,56]}},
+    {cambios:{a:{15:[66,55],14:[63,61],10:[62,44],13:[63,47]},
+              b:{12:[60,35],13:[62,42],14:[72,58]}},
      dueno:"a15",
      nota:"Dos contra uno: pasados los de adentro, el 15 va sobre el wing para fijarlo.",
-     flechas:[{t:"corrida", p:[68,48,72,54]}, {t:"pase", p:[72,54,66,59]}]},
+     flechas:[{t:"corrida", p:[66,55,70,59]}, {t:"pase", p:[70,59,64,62]}]},
 
-    {cambios:{a:{15:[73,55],14:[70,61]}, b:{14:[74,52]}},
+    {cambios:{a:{15:[71,58],14:[68,63]}, b:{14:[73,55]}},
      dueno:"a14",
      nota:"El wing la recibe con el hueco por afuera y se va al ingoal.",
-     flechas:[{t:"corrida", p:[70,61,106,65]}]}
+     flechas:[{t:"corrida", p:[68,63,106,66]}]}
   ])};
 }
 
