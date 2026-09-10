@@ -35,3 +35,9 @@ SVG en metros: todo el dominio (formaciones, ruteo de la pelota, interpolacion)
 trabaja en metros de cancha y solo el dibujo sabe de pixeles.
 
 Las jugadas se guardan en el navegador de cada uno (localStorage).
+
+## Publicacion
+
+El sitio sale de `index.html` en la raiz de `main`, servido por GitHub Pages con
+la opcion *Deploy from a branch*. No hay build ni workflow: cada push a `main`
+actualiza la pagina publicada.
