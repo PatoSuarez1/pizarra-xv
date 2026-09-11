@@ -176,6 +176,10 @@ label.campo{display:flex; flex-direction:column; gap:4px; font-size:12px; color:
   font-family:"IBM Plex Sans Condensed",sans-serif; font-weight:700; font-size:13px;
   padding-inline:4px; white-space:nowrap;
 }
+/* Deshacer vive cerca de la cancha: sobre el pasto en el celular, y en la barra
+   de herramientas en pantalla ancha, donde el encabezado queda lejisimos. */
+.solo-amplio{display:none}
+@media (min-width:761px){ .solo-angosto{display:none} .solo-amplio{display:inline-flex} }
 .zoom-flotante{position:absolute; top:14px; right:14px; display:flex; gap:5px; z-index:2}
 .zoom-flotante .btn, .pista, .barra.sobre-cancha .btn{
   background:rgba(12,20,15,.62); border-color:rgba(243,247,241,.32); color:#F3F7F1}
@@ -258,7 +262,7 @@ label.campo{display:flex; flex-direction:column; gap:4px; font-size:12px; color:
     <div class="espaciador"></div>
     <div class="fila pegada">
       <button class="btn chico quieto" id="btn-tema" type="button" title="Cambiar entre claro y oscuro">Tema</button>
-      <button class="btn chico quieto" id="btn-deshacer" type="button">Deshacer</button>
+      <button class="btn chico quieto solo-angosto" data-deshacer type="button">Deshacer</button>
       <button class="btn chico quieto" id="btn-png" type="button" hidden>Bajar PNG</button>
     </div>
   </header>
@@ -275,6 +279,7 @@ label.campo{display:flex; flex-direction:column; gap:4px; font-size:12px; color:
           <button class="btn" type="button" data-herr="patada" aria-pressed="false">Patada</button>
         </div>
         <div class="espaciador"></div>
+        <button class="btn solo-amplio" data-deshacer type="button">Deshacer</button>
         <button class="btn" id="btn-inicio" type="button">Inicio<span class="solo-ancho"> de partido</span></button>
       </div>
       <div class="tarjeta cancha-marco escena">
@@ -351,7 +356,8 @@ label.campo{display:flex; flex-direction:column; gap:4px; font-size:12px; color:
           su número. Se numeran en el orden en que las dibujás y <b>tocando el número lo
           cambiás</b>. Las del mismo número pasan a la vez; los números se ejecutan en
           sucesión, así que un pase con el 1 y la corrida del que lo recibe con el 2 se ven
-          uno después del otro, y no todos encima.</p>
+          uno después del otro, y no todos encima. Varias corridas pueden compartir número
+          —corren juntas—, pero dos pases no: hay una sola pelota.</p>
         <div class="fila">
           <button class="btn chico quieto" id="btn-sin-flechas" type="button">Sacar las flechas del paso</button>
         </div>
@@ -900,7 +906,7 @@ const posiciones = () => paso().pos;
 function anotar(){                                   // punto de retorno para deshacer
   historial.push(JSON.stringify({j:estado.jugada, p:estado.paso}));
   if (historial.length > 60) historial.shift();
-  $("btn-deshacer").disabled = false;
+  document.querySelectorAll("[data-deshacer]").forEach(b => b.disabled = false);
 }
 function deshacer(){
   const previo = historial.pop();
@@ -908,7 +914,7 @@ function deshacer(){
   const d = JSON.parse(previo);
   estado.jugada = d.j; estado.paso = Math.min(d.p, d.j.pasos.length-1);
   estado.seleccion = [];
-  $("btn-deshacer").disabled = historial.length === 0;
+  document.querySelectorAll("[data-deshacer]").forEach(b => b.disabled = historial.length === 0);
   render();
 }
 
@@ -1209,7 +1215,7 @@ svg.addEventListener("pointerdown", (ev)=>{
   if (marcaOrden && estado.herramienta === "mover"){
     anotar();
     const f = paso().flechas.filter(x => x.id === marcaOrden.getAttribute("data-orden"))[0];
-    if (f) f.orden = ordenDe(f) >= paso().flechas.length ? 1 : ordenDe(f) + 1;
+    if (f) f.orden = siguienteOrden(paso(), f);
     dibujarFlechas();
     return;
   }
@@ -1411,6 +1417,22 @@ function ordenesDelPaso(paso){
   for (const f of paso.flechas) if (vistos.indexOf(ordenDe(f)) < 0) vistos.push(ordenDe(f));
   return vistos.sort((a,b)=>a-b);
 }
+/* Dos jugadores pueden correr a la vez, asi que dos corridas comparten numero sin
+   problema. Un pase o una patada no: hay una sola pelota, y no puede salir de dos
+   lugares en el mismo momento. Por eso al ciclar el numero de un pase se saltean
+   los momentos donde ya hay otro.                                            */
+function siguienteOrden(paso, f){
+  const total = paso.flechas.length;
+  let n = ordenDe(f);
+  for (let vuelta = 0; vuelta < total; vuelta++){
+    n = n >= total ? 1 : n + 1;
+    if (f.tipo === "corrida") return n;
+    const ocupado = paso.flechas.some(x => x !== f && x.tipo !== "corrida" && ordenDe(x) === n);
+    if (!ocupado) return n;
+  }
+  return ordenDe(f);                     // no hay hueco libre: se queda donde esta
+}
+
 function compactarOrdenes(paso){         // sin huecos despues de borrar una
   const ord = ordenesDelPaso(paso);
   for (const f of paso.flechas) f.orden = ord.indexOf(ordenDe(f)) + 1;
@@ -1486,8 +1508,10 @@ $("btn-paso-borrar").addEventListener("click", ()=>{
 });
 $("nota").addEventListener("input", (e)=>{ paso().nota = e.target.value; });
 $("btn-sin-flechas").addEventListener("click", ()=>{ anotar(); paso().flechas = []; dibujarFlechas(); });
-$("btn-deshacer").addEventListener("click", deshacer);
-$("btn-deshacer").disabled = true;
+document.querySelectorAll("[data-deshacer]").forEach(b=>{
+  b.addEventListener("click", deshacer);
+  b.disabled = true;
+});
 
 /* ===================== Reproducción ===================== */
 const quietito = window.matchMedia("(prefers-reduced-motion: reduce)");

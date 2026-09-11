@@ -23,7 +23,8 @@ que se guardan por pasos y se reproducen con la pelota moviendose sola.
 - **El orden adentro del paso lo pone el usuario**: con dos o mas flechas cada una
   muestra su numero, y tocandolo cambia. Las del mismo numero pasan a la vez; los
   numeros se ejecutan en sucesion, asi que un pase con el 1 y la corrida del que
-  lo recibe con el 2 se reproducen uno despues del otro.
+  lo recibe con el 2 se reproducen uno despues del otro. Varias corridas pueden
+  compartir numero —corren juntas—, pero dos pases no: hay una sola pelota.
 - **Seleccion multiple**: se encierran varias fichas y se mueven, giran o espejan
   como un bloque, sin deformar la formacion.
 
