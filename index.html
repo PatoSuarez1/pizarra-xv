@@ -342,10 +342,11 @@ label.campo{display:flex; flex-direction:column; gap:4px; font-size:12px; color:
         <p class="rotulo">Flechas</p>
         <p class="pie">Elegí Corrida, Pase o Patada arriba de la cancha y arrastrá sobre
           el pasto. Tocá una flecha para borrarla. Son las de este paso.</p>
-        <p class="pie"><b>La pelota sigue a las flechas:</b> si dibujás un pase o una
-          patada saliendo del que la lleva, al agregar el paso siguiente la pelota viaja
-          hasta ahí y la toma el jugador que esté en la punta. Una corrida se la lleva
-          puesta. Y el que la tiene la arrastra consigo cuando lo movés.</p>
+        <p class="pie"><b>Las flechas son órdenes:</b> al tocar <b>+ Paso</b> se ejecutan
+          todas. Cada corrida corre a su jugador; si dibujás una corrida con varias fichas
+          marcadas, corren todas juntas. Y la pelota va de pase en pase mientras encuentre
+          una flecha que salga de quien la lleva, así que una cadena 9 → 10 → 5 se resuelve
+          en un solo paso. El que la tiene también la arrastra consigo cuando lo movés.</p>
         <div class="fila">
           <button class="btn chico quieto" id="btn-sin-flechas" type="button">Sacar las flechas del paso</button>
         </div>
@@ -1341,8 +1342,12 @@ function soltar(ev){
     const t = trazando; trazando = null;
     if (t.x2 !== undefined && Math.hypot(t.x2-t.x1, t.y2-t.y1) > 1.5){
       anotar();
+      // una corrida dibujada con varias fichas marcadas es la orden para TODAS
+      const enGrupo = t.tipo === "corrida" && estado.seleccion.length > 1
+        ? estado.seleccion.filter(k => k !== "pelota") : null;
       paso().flechas.push({id:"f"+Date.now()+Math.random().toString(36).slice(2,6),
-        tipo:t.tipo, x1:t.x1, y1:t.y1, x2:t.x2, y2:t.y2});
+        tipo:t.tipo, x1:t.x1, y1:t.y1, x2:t.x2, y2:t.y2,
+        mueve: enGrupo && enGrupo.length ? enGrupo : null});
     }
     dibujarFlechas();
   }
@@ -1359,23 +1364,39 @@ svg.addEventListener("pointercancel", soltar);
    la pelota: un pase o una patada la mandan al destino —y la toma quien este ahi—,
    y una corrida lo lleva a el con la pelota. Las flechas quedan en el paso donde
    se dibujaron, que es el que las explica.                                     */
-function ejecutarFlecha(anterior, copia){
-  const dueno = anterior.dueno;
-  const desde = dueno && anterior.pos[dueno];
-  if (!desde) return;
-  let elegida = null, menor = 3.5;
+function ejecutarFlechas(anterior, copia){
+  /* Las flechas son ordenes, no dibujo: al abrir el paso siguiente se ejecutan
+     TODAS. Cada corrida corre a su jugador —o a todo el grupo que estaba marcado
+     cuando se dibujo— y la pelota va de pase en pase mientras encuentre una
+     flecha que salga de quien la lleva, asi una cadena 9 -> 10 -> 5 se resuelve
+     en un solo paso.                                                          */
   for (const f of anterior.flechas){
-    const d = Math.hypot(f.x1-desde[0], f.y1-desde[1]);
-    if (d < menor){ menor = d; elegida = f; }
+    if (f.tipo !== "corrida") continue;
+    const dx = f.x2 - f.x1, dy = f.y2 - f.y1;
+    const uno = jugadorCerca(anterior.pos, [f.x1, f.y1], 4);
+    const quienes = (f.mueve && f.mueve.length) ? f.mueve : (uno ? [uno] : []);
+    for (const k of quienes)
+      if (copia.pos[k]) copia.pos[k] = acotar([copia.pos[k][0]+dx, copia.pos[k][1]+dy]);
   }
-  if (!elegida) return;
-  const destino = acotar([elegida.x2, elegida.y2]);
-  if (elegida.tipo === "corrida"){
-    copia.pos[dueno] = destino;                 // se la lleva corriendo
-  } else {
-    const receptor = jugadorCerca(copia.pos, destino, 4.5);
-    copia.dueno = receptor;                     // null si la patada fue al espacio
-    if (!receptor) copia.pos.pelota = destino;
+
+  const usadas = {};
+  for (let salto = 0; salto < 6; salto++){
+    const desde = copia.dueno && anterior.pos[copia.dueno];
+    if (!desde) break;
+    let elegida = null, menor = 4;
+    for (const f of anterior.flechas){
+      if (f.tipo === "corrida" || usadas[f.id]) continue;
+      const d = Math.hypot(f.x1-desde[0], f.y1-desde[1]);
+      if (d <= menor){ menor = d; elegida = f; }   // empate: gana la ultima dibujada
+    }
+    if (!elegida) break;
+    usadas[elegida.id] = true;
+    const destino = acotar([elegida.x2, elegida.y2]);
+    // el pase se dibuja hacia donde el receptor esta AHORA, aunque despues corra
+    const receptor = jugadorCerca(anterior.pos, destino, 4.5)
+                  || jugadorCerca(copia.pos, destino, 4.5);
+    copia.dueno = receptor;
+    if (!receptor){ copia.pos.pelota = destino; break; }
   }
   pegarPelota(copia.pos, copia.dueno);
 }
@@ -1384,7 +1405,7 @@ $("btn-paso-nuevo").addEventListener("click", ()=>{
   anotar();
   const copia = JSON.parse(JSON.stringify(paso()));
   copia.flechas = []; copia.nota = "";
-  ejecutarFlecha(paso(), copia);
+  ejecutarFlechas(paso(), copia);
   estado.jugada.pasos.splice(estado.paso+1, 0, copia);
   estado.paso++;
   render(); mirarCancha();
@@ -1480,6 +1501,8 @@ document.querySelectorAll("#formaciones .btn").forEach(b=>{
   b.addEventListener("click", ()=>{
     anotar();
     estado.seleccion = [];
+    // los pone a todos en otro lado: lo que dibujaba el paso ya no aplica
+    paso().flechas = [];
     const clave = b.getAttribute("data-form"), quien = $("equipo-formacion").value;
     Object.assign(posiciones(), ubicarFormacion(clave, quien,
       $("lugar-largo").value, $("lugar-ancho").value, +$("cantidad-line").value));
@@ -1506,6 +1529,7 @@ $("btn-inicio").addEventListener("click", ()=>{
   if (estado.reproduciendo) parar();
   anotar();
   const pos = posiciones();
+  paso().flechas = [];
   Object.assign(pos, ubicarFormacion("salida", "a", "mitad", "centro"));
   paso().dueno = duenoDeFormacion("salida", "a");
   pegarPelota(pos, paso().dueno);
