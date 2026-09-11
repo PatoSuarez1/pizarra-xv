@@ -20,6 +20,10 @@ que se guardan por pasos y se reproducen con la pelota moviendose sola.
   que estaba marcado cuando se dibujo— y la pelota va de pase en pase mientras
   encuentre una flecha que salga de quien la lleva, asi una cadena 9 -> 10 -> 5 se
   resuelve en un solo paso. El que la tiene la arrastra consigo cuando se lo mueve.
+- **El orden adentro del paso lo pone el usuario**: con dos o mas flechas cada una
+  muestra su numero, y tocandolo cambia. Las del mismo numero pasan a la vez; los
+  numeros se ejecutan en sucesion, asi que un pase con el 1 y la corrida del que
+  lo recibe con el 2 se reproducen uno despues del otro.
 - **Seleccion multiple**: se encierran varias fichas y se mueven, giran o espejan
   como un bloque, sin deformar la formacion.
 

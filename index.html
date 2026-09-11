@@ -295,6 +295,7 @@ label.campo{display:flex; flex-direction:column; gap:4px; font-size:12px; color:
             <g id="capa-cancha"></g>
             <g id="capa-flechas"></g>
             <g id="capa-fichas"></g>
+            <g id="capa-ordenes"></g>
             <g id="capa-seleccion"></g>
           </g>
         </svg>
@@ -345,8 +346,12 @@ label.campo{display:flex; flex-direction:column; gap:4px; font-size:12px; color:
         <p class="pie"><b>Las flechas son órdenes:</b> al tocar <b>+ Paso</b> se ejecutan
           todas. Cada corrida corre a su jugador; si dibujás una corrida con varias fichas
           marcadas, corren todas juntas. Y la pelota va de pase en pase mientras encuentre
-          una flecha que salga de quien la lleva, así que una cadena 9 → 10 → 5 se resuelve
-          en un solo paso. El que la tiene también la arrastra consigo cuando lo movés.</p>
+          una flecha que salga de quien la lleva.</p>
+        <p class="pie"><b>El orden lo ponés vos:</b> con dos o más flechas, cada una muestra
+          su número. Se numeran en el orden en que las dibujás y <b>tocando el número lo
+          cambiás</b>. Las del mismo número pasan a la vez; los números se ejecutan en
+          sucesión, así que un pase con el 1 y la corrida del que lo recibe con el 2 se ven
+          uno después del otro, y no todos encima.</p>
         <div class="fila">
           <button class="btn chico quieto" id="btn-sin-flechas" type="button">Sacar las flechas del paso</button>
         </div>
@@ -615,7 +620,8 @@ let marcando = null, esperaMarca = null, desdePx = null, rotando = null;
 const $ = (id)=>document.getElementById(id);
 const svg = $("cancha"), mundo = $("mundo");
 const capaCancha = $("capa-cancha"), capaFlechas = $("capa-flechas"),
-      capaFichas = $("capa-fichas"), capaSeleccion = $("capa-seleccion");
+      capaFichas = $("capa-fichas"), capaOrdenes = $("capa-ordenes"),
+      capaSeleccion = $("capa-seleccion");
 const NS = "http://www.w3.org/2000/svg";
 
 function crear(tipo, atributos){
@@ -1020,28 +1026,46 @@ const ESTILO_FLECHA = {
   patada: {color:"#F5D9A6", guion:"3.2 1.8", punta:"punta-patada", grosor:.6}
 };
 
-function dibujarFlechas(progreso){
+function dibujarFlechas(progreso, ordenActivo){
   capaFlechas.textContent = "";
-  const frag = document.createDocumentFragment();
+  capaOrdenes.textContent = "";
+  const frag = document.createDocumentFragment(), numeros = document.createDocumentFragment();
+  const numerar = progreso === undefined && paso().flechas.length > 1;
+  const r = radioFicha();
   for (const f of paso().flechas){
+    const o = ordenDe(f);
+    if (ordenActivo !== undefined && o > ordenActivo) continue;   // todavia no le toca
     const e = ESTILO_FLECHA[f.tipo] || ESTILO_FLECHA.corrida;
     const largo = Math.hypot(f.x2-f.x1, f.y2-f.y1);
     const trazo = crear("line",{x1:f.x1, y1:f.y1, x2:f.x2, y2:f.y2,
       stroke:e.color, "stroke-width":e.grosor, "stroke-linecap":"round",
       "marker-end":`url(#${e.punta})`, "stroke-dasharray":e.guion});
-    if (progreso !== undefined && progreso < 1){
+    const enCurso = progreso !== undefined && progreso < 1 &&
+      (ordenActivo === undefined || o === ordenActivo);
+    if (enCurso){
       trazo.setAttribute("stroke-dasharray", largo);
       trazo.setAttribute("stroke-dashoffset", largo * (1 - progreso));
       trazo.removeAttribute("marker-end");
     }
     frag.appendChild(trazo);
     if (progreso === undefined){
-      const zona = crear("line",{x1:f.x1, y1:f.y1, x2:f.x2, y2:f.y2, stroke:"transparent",
-        "stroke-width":2.4, "data-flecha":f.id, style:"cursor:pointer;pointer-events:stroke"});
-      frag.appendChild(zona);
+      frag.appendChild(crear("line",{x1:f.x1, y1:f.y1, x2:f.x2, y2:f.y2, stroke:"transparent",
+        "stroke-width":2.4, "data-flecha":f.id, style:"cursor:pointer;pointer-events:stroke"}));
+    }
+    if (numerar){
+      // el numero, a un tercio del recorrido para no taparle la ficha a nadie
+      const mx = f.x1 + (f.x2-f.x1)*.34, my = f.y1 + (f.y2-f.y1)*.34, rm = r*.62;
+      numeros.appendChild(crear("circle",{cx:mx, cy:my, r:rm, fill:"var(--sup)",
+        stroke:e.color, "stroke-width":Math.max(rm*.22,.14),
+        "data-orden":f.id, style:"cursor:pointer"}));
+      const t = crear("text",{x:mx, y:my, class:"num", fill:"var(--texto)", "font-size":rm*1.2});
+      t.textContent = o;
+      if (estado.vertical) t.setAttribute("transform", `rotate(-90 ${mx} ${my})`);
+      numeros.appendChild(t);
     }
   }
   capaFlechas.appendChild(frag);
+  capaOrdenes.appendChild(numeros);
 }
 
 function dibujarPasos(){
@@ -1181,11 +1205,20 @@ svg.addEventListener("pointerdown", (ev)=>{
     ev.preventDefault(); return;
   }
   if (punteros.size > 2) return;
+  const marcaOrden = ev.target.closest("[data-orden]");
+  if (marcaOrden && estado.herramienta === "mover"){
+    anotar();
+    const f = paso().flechas.filter(x => x.id === marcaOrden.getAttribute("data-orden"))[0];
+    if (f) f.orden = ordenDe(f) >= paso().flechas.length ? 1 : ordenDe(f) + 1;
+    dibujarFlechas();
+    return;
+  }
   const zonaFlecha = ev.target.closest("[data-flecha]");
   if (zonaFlecha && estado.herramienta === "mover"){
     anotar();
     const id = zonaFlecha.getAttribute("data-flecha");
     paso().flechas = paso().flechas.filter(f => f.id !== id);
+    compactarOrdenes(paso());
     dibujarFlechas();
     return;
   }
@@ -1345,8 +1378,10 @@ function soltar(ev){
       // una corrida dibujada con varias fichas marcadas es la orden para TODAS
       const enGrupo = t.tipo === "corrida" && estado.seleccion.length > 1
         ? estado.seleccion.filter(k => k !== "pelota") : null;
+      const ord = ordenesDelPaso(paso());
       paso().flechas.push({id:"f"+Date.now()+Math.random().toString(36).slice(2,6),
         tipo:t.tipo, x1:t.x1, y1:t.y1, x2:t.x2, y2:t.y2,
+        orden: ord.length ? ord[ord.length-1] + 1 : 1,
         mueve: enGrupo && enGrupo.length ? enGrupo : null});
     }
     dibujarFlechas();
@@ -1364,27 +1399,38 @@ svg.addEventListener("pointercancel", soltar);
    la pelota: un pase o una patada la mandan al destino —y la toma quien este ahi—,
    y una corrida lo lleva a el con la pelota. Las flechas quedan en el paso donde
    se dibujaron, que es el que las explica.                                     */
-function ejecutarFlechas(anterior, copia){
-  /* Las flechas son ordenes, no dibujo: al abrir el paso siguiente se ejecutan
-     TODAS. Cada corrida corre a su jugador —o a todo el grupo que estaba marcado
-     cuando se dibujo— y la pelota va de pase en pase mientras encuentre una
-     flecha que salga de quien la lleva, asi una cadena 9 -> 10 -> 5 se resuelve
-     en un solo paso.                                                          */
-  for (const f of anterior.flechas){
+/* ===================== El orden adentro de un paso =====================
+   Cada flecha lleva su numero. Las del MISMO numero pasan a la vez; los numeros
+   se ejecutan en orden, asi que un pase y la corrida del que lo recibe se pueden
+   separar en dos momentos del mismo paso. Los origenes de TODAS las flechas se
+   resuelven contra el estado en que empieza el paso —que es lo que el usuario
+   estaba mirando cuando las dibujo—, aunque los efectos se acumulen.        */
+const ordenDe = (f)=> f.orden || 1;
+function ordenesDelPaso(paso){
+  const vistos = [];
+  for (const f of paso.flechas) if (vistos.indexOf(ordenDe(f)) < 0) vistos.push(ordenDe(f));
+  return vistos.sort((a,b)=>a-b);
+}
+function compactarOrdenes(paso){         // sin huecos despues de borrar una
+  const ord = ordenesDelPaso(paso);
+  for (const f of paso.flechas) f.orden = ord.indexOf(ordenDe(f)) + 1;
+}
+
+function aplicarGrupo(inicial, acumulado, flechas){
+  for (const f of flechas){
     if (f.tipo !== "corrida") continue;
     const dx = f.x2 - f.x1, dy = f.y2 - f.y1;
-    const uno = jugadorCerca(anterior.pos, [f.x1, f.y1], 4);
+    const uno = jugadorCerca(inicial.pos, [f.x1, f.y1], 4);
     const quienes = (f.mueve && f.mueve.length) ? f.mueve : (uno ? [uno] : []);
     for (const k of quienes)
-      if (copia.pos[k]) copia.pos[k] = acotar([copia.pos[k][0]+dx, copia.pos[k][1]+dy]);
+      if (acumulado.pos[k]) acumulado.pos[k] = acotar([acumulado.pos[k][0]+dx, acumulado.pos[k][1]+dy]);
   }
-
   const usadas = {};
   for (let salto = 0; salto < 6; salto++){
-    const desde = copia.dueno && anterior.pos[copia.dueno];
+    const desde = acumulado.dueno && inicial.pos[acumulado.dueno];
     if (!desde) break;
     let elegida = null, menor = 4;
-    for (const f of anterior.flechas){
+    for (const f of flechas){
       if (f.tipo === "corrida" || usadas[f.id]) continue;
       const d = Math.hypot(f.x1-desde[0], f.y1-desde[1]);
       if (d <= menor){ menor = d; elegida = f; }   // empate: gana la ultima dibujada
@@ -1393,12 +1439,33 @@ function ejecutarFlechas(anterior, copia){
     usadas[elegida.id] = true;
     const destino = acotar([elegida.x2, elegida.y2]);
     // el pase se dibuja hacia donde el receptor esta AHORA, aunque despues corra
-    const receptor = jugadorCerca(anterior.pos, destino, 4.5)
-                  || jugadorCerca(copia.pos, destino, 4.5);
-    copia.dueno = receptor;
-    if (!receptor){ copia.pos.pelota = destino; break; }
+    const receptor = jugadorCerca(inicial.pos, destino, 4.5)
+                  || jugadorCerca(acumulado.pos, destino, 4.5);
+    acumulado.dueno = receptor;
+    if (!receptor){ acumulado.pos.pelota = destino; break; }
   }
-  pegarPelota(copia.pos, copia.dueno);
+  pegarPelota(acumulado.pos, acumulado.dueno);
+}
+
+/* Los estados por los que pasa un paso, uno por cada numero de flecha. Sirven
+   para la reproduccion —cada uno es un momento— y el ultimo es con lo que
+   arranca el paso siguiente.                                               */
+function momentosDe(paso){
+  const salida = [];
+  let acumulado = {pos: JSON.parse(JSON.stringify(paso.pos)), dueno: paso.dueno};
+  for (const o of ordenesDelPaso(paso)){
+    acumulado = {pos: JSON.parse(JSON.stringify(acumulado.pos)), dueno: acumulado.dueno};
+    aplicarGrupo(paso, acumulado, paso.flechas.filter(f => ordenDe(f) === o));
+    salida.push(acumulado);
+  }
+  return salida;
+}
+
+function ejecutarFlechas(anterior, copia){
+  const momentos = momentosDe(anterior);
+  if (!momentos.length){ pegarPelota(copia.pos, copia.dueno); return; }
+  const fin = momentos[momentos.length-1];
+  copia.pos = fin.pos; copia.dueno = fin.dueno;
 }
 
 $("btn-paso-nuevo").addEventListener("click", ()=>{
@@ -1431,13 +1498,37 @@ function cartel(texto){
   if (texto){ c.textContent = texto; c.hidden = false; } else c.hidden = true;
 }
 
-function tramo(i, ms){
+/* Un paso se reproduce como una sucesion de momentos: el estado en que empieza,
+   uno por cada numero de flecha, y el estado guardado del paso siguiente, que
+   absorbe lo que se haya movido a mano. Los que no mueven nada se saltean.  */
+function cuadrosDe(i){
+  const a = estado.jugada.pasos[i], b = estado.jugada.pasos[i+1];
+  const crudos = [{pos:a.pos, dueno:a.dueno}]
+    .concat(momentosDe(a))
+    .concat([{pos:b.pos, dueno:b.dueno}]);
+  const quietos = (x, y)=>{
+    for (const k in y.pos){
+      const p = x.pos[k], q = y.pos[k];
+      if (!p || !q || Math.hypot(p[0]-q[0], p[1]-q[1]) > .25) return false;
+    }
+    return true;
+  };
+  const salida = [crudos[0]], ordenes = [];
+  const listaOrdenes = ordenesDelPaso(a);
+  for (let k = 1; k < crudos.length; k++){
+    if (quietos(salida[salida.length-1], crudos[k])) continue;
+    salida.push(crudos[k]);
+    ordenes.push(k <= listaOrdenes.length ? listaOrdenes[k-1] : undefined);
+  }
+  if (salida.length === 1){ salida.push(crudos[crudos.length-1]); ordenes.push(undefined); }
+  return {cuadros: salida, ordenes};
+}
+
+function interpolar(desde, hasta, ms, flechasDe){
   return new Promise((listo)=>{
-    const desde = estado.jugada.pasos[i].pos, hasta = estado.jugada.pasos[i+1].pos;
-    estado.paso = i; dibujarPasos(); cartel(estado.jugada.pasos[i].nota);
     if (quietito.matches){
-      dibujarFichas(hasta); dibujarFlechas(1);
-      setTimeout(listo, ms*0.7); return;
+      dibujarFichas(hasta.pos); dibujarFlechas(1, flechasDe);
+      setTimeout(listo, ms*.7); return;
     }
     const t0 = performance.now();
     const marco = (t)=>{
@@ -1445,16 +1536,26 @@ function tramo(i, ms){
       const k = Math.min(1, (t-t0)/ms);
       const e = k < .5 ? 4*k*k*k : 1 - Math.pow(-2*k+2, 3)/2;
       const mezcla = {};
-      for (const clave in hasta){
-        const b = hasta[clave], a = desde[clave] || b;
+      for (const clave in hasta.pos){
+        const b = hasta.pos[clave], a = desde.pos[clave] || b;
         mezcla[clave] = [a[0]+(b[0]-a[0])*e, a[1]+(b[1]-a[1])*e];
       }
       dibujarFichas(mezcla);
-      dibujarFlechas(Math.min(1, k*1.3));
+      dibujarFlechas(Math.min(1, k*1.3), flechasDe);
       if (k < 1) rafId = requestAnimationFrame(marco); else listo();
     };
     rafId = requestAnimationFrame(marco);
   });
+}
+
+async function tramo(i, ms){
+  const {cuadros, ordenes} = cuadrosDe(i);
+  estado.paso = i; dibujarPasos(); cartel(estado.jugada.pasos[i].nota);
+  const partes = cuadros.length - 1;
+  for (let k = 0; k < partes; k++){
+    if (!estado.reproduciendo) return;
+    await interpolar(cuadros[k], cuadros[k+1], ms/partes, ordenes[k]);
+  }
 }
 
 async function reproducir(){
